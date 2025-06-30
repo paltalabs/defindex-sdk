@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Soroswap Widget Demo</title>
+    <style>
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .widget-container {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 400px;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 24px;
+        }
+
+        .logo {
+            width: 40px;
+            height: 40px;
+            background: #667eea;
+            border-radius: 50%;
+            display: inline-block;
+            margin-bottom: 8px;
+        }
+
+        h1 {
+            margin: 0;
+            font-size: 24px;
+            color: #1a1a1a;
+            font-weight: 600;
+        }
+
+        .subtitle {
+            color: #666;
+            font-size: 14px;
+            margin-top: 4px;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 500;
+            color: #333;
+            font-size: 14px;
+        }
+
+        select, input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e1e5e9;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.2s;
+            box-sizing: border-box;
+        }
+
+        select:focus, input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .token-input {
+            display: flex;
+            align-items: center;
+            border: 2px solid #e1e5e9;
+            border-radius: 8px;
+            padding: 4px;
+            transition: border-color 0.2s;
+        }
+
+        .token-input:focus-within {
+            border-color: #667eea;
+        }
+
+        .token-select {
+            border: none;
+            background: #f8f9fa;
+            border-radius: 6px;
+            padding: 8px 12px;
+            margin-right: 8px;
+            font-weight: 500;
+            min-width: 80px;
+        }
+
+        .amount-input {
+            border: none;
+            flex: 1;
+            padding: 8px;
+            font-size: 16px;
+        }
+
+        .swap-direction {
+            text-align: center;
+            margin: 16px 0;
+        }
+
+        .swap-button {
+            background: #f8f9fa;
+            border: 1px solid #e1e5e9;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .swap-button:hover {
+            background: #e9ecef;
+            transform: rotate(180deg);
+        }
+
+        .quote-info {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 16px;
+            margin: 16px 0;
+            display: none;
+        }
+
+        .quote-info.show {
+            display: block;
+        }
+
+        .quote-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        .quote-row:last-child {
+            margin-bottom: 0;
+        }
+
+        .quote-label {
+            color: #666;
+        }
+
+        .quote-value {
+            font-weight: 500;
+            color: #333;
+        }
+
+        .action-button {
+            width: 100%;
+            padding: 16px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+            margin-top: 16px;
+        }
+
+        .action-button:hover:not(:disabled) {
+            background: #5a6fd8;
+        }
+
+        .action-button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .loading {
+            opacity: 0.7;
+            pointer-events: none;
+        }
+
+        .error {
+            color: #dc3545;
+            background: #f8d7da;
+            border: 1px solid #f5c6cb;
+            border-radius: 6px;
+            padding: 12px;
+            margin: 16px 0;
+            font-size: 14px;
+        }
+
+        .success {
+            color: #155724;
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            border-radius: 6px;
+            padding: 12px;
+            margin: 16px 0;
+            font-size: 14px;
+        }
+
+        .network-selector {
+            text-align: center;
+            margin-bottom: 16px;
+        }
+
+        .network-toggle {
+            display: inline-flex;
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 4px;
+        }
+
+        .network-option {
+            padding: 8px 16px;
+            border-radius: 6px;
+            border: none;
+            background: none;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+
+        .network-option.active {
+            background: #667eea;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="widget-container">
+        <div class="header">
+            <div class="logo"></div>
+            <h1>Soroswap</h1>
+            <div class="subtitle">Swap tokens on Stellar</div>
+        </div>
+
+        <div class="network-selector">
+            <div class="network-toggle">
+                <button class="network-option active" onclick="switchNetwork('mainnet')">Mainnet</button>
+                <button class="network-option" onclick="switchNetwork('testnet')">Testnet</button>
+            </div>
+        </div>
+
+        <form id="swapForm">
+            <div class="form-group">
+                <label>You Pay</label>
+                <div class="token-input">
+                    <select class="token-select" id="tokenIn">
+                        <option value="CAS3J7GYLGXMF6TDJBBYYSE3HQ6BBSMLNUQ34T6TZMYMW2EVH34XOWMA">USDC</option>
+                        <option value="CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC">XLM</option>
+                        <option value="CCXQWO33QBEUDVTWDDOYLD2SYEJSWUM6DIJUX6NDAOSXNCGK3PSIWQJG">AQUA</option>
+                    </select>
+                    <input type="number" class="amount-input" id="amountIn" placeholder="0.0" step="any">
+                </div>
+            </div>
+
+            <div class="swap-direction">
+                <button type="button" class="swap-button" onclick="swapTokens()">
+                    ↓
+                </button>
+            </div>
+
+            <div class="form-group">
+                <label>You Receive</label>
+                <div class="token-input">
+                    <select class="token-select" id="tokenOut">
+                        <option value="CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC">XLM</option>
+                        <option value="CAS3J7GYLGXMF6TDJBBYYSE3HQ6BBSMLNUQ34T6TZMYMW2EVH34XOWMA">USDC</option>
+                        <option value="CCXQWO33QBEUDVTWDDOYLD2SYEJSWUM6DIJUX6NDAOSXNCGK3PSIWQJG">AQUA</option>
+                    </select>
+                    <input type="number" class="amount-input" id="amountOut" placeholder="0.0" readonly>
+                </div>
+            </div>
+
+            <div class="quote-info" id="quoteInfo">
+                <div class="quote-row">
+                    <span class="quote-label">Expected Output:</span>
+                    <span class="quote-value" id="expectedOutput">-</span>
+                </div>
+                <div class="quote-row">
+                    <span class="quote-label">Price Impact:</span>
+                    <span class="quote-value" id="priceImpact">-</span>
+                </div>
+                <div class="quote-row">
+                    <span class="quote-label">Route:</span>
+                    <span class="quote-value" id="route">-</span>
+                </div>
+                <div class="quote-row">
+                    <span class="quote-label">Fee:</span>
+                    <span class="quote-value" id="fee">0.5%</span>
+                </div>
+            </div>
+
+            <div id="errorMessage" class="error" style="display: none;"></div>
+            <div id="successMessage" class="success" style="display: none;"></div>
+
+            <button type="button" class="action-button" id="getQuoteBtn" onclick="getQuote()">
+                Get Quote
+            </button>
+            
+            <button type="button" class="action-button" id="swapBtn" onclick="executeSwap()" style="display: none;">
+                Execute Swap
+            </button>
+        </form>
+    </div>
+
+    <script>
+        let currentNetwork = 'mainnet';
+        let currentQuote = null;
+
+        // Mock backend API calls (in real implementation, these would call your server)
+        async function callBackendAPI(endpoint, data = null) {
+            // Simulate API call delay
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            
+            if (endpoint === '/api/quote') {
+                // Mock quote response
+                return {
+                    trade: {
+                        expectedAmountOut: (parseFloat(data.amount) * 0.998).toFixed(6),
+                        amountOutMin: (parseFloat(data.amount) * 0.995).toFixed(6)
+                    },
+                    priceImpact: { numerator: '25', denominator: '10000' },
+                    xdr: 'MOCK_TRANSACTION_XDR_' + Date.now()
+                };
+            } else if (endpoint === '/api/send') {
+                // Mock send response
+                return {
+                    hash: '0x' + Math.random().toString(16).substr(2, 8),
+                    status: 'success'
+                };
+            }
+        }
+
+        function switchNetwork(network) {
+            currentNetwork = network;
+            document.querySelectorAll('.network-option').forEach(btn => {
+                btn.classList.toggle('active', btn.textContent.toLowerCase() === network);
+            });
+        }
+
+        function swapTokens() {
+            const tokenIn = document.getElementById('tokenIn');
+            const tokenOut = document.getElementById('tokenOut');
+            const amountIn = document.getElementById('amountIn');
+            const amountOut = document.getElementById('amountOut');
+
+            // Swap the values
+            const tempToken = tokenIn.value;
+            tokenIn.value = tokenOut.value;
+            tokenOut.value = tempToken;
+
+            const tempAmount = amountIn.value;
+            amountIn.value = amountOut.value;
+            amountOut.value = tempAmount;
+
+            // Clear quote
+            hideQuote();
+        }
+
+        async function getQuote() {
+            const amountIn = document.getElementById('amountIn').value;
+            const tokenIn = document.getElementById('tokenIn').value;
+            const tokenOut = document.getElementById('tokenOut').value;
+
+            if (!amountIn || parseFloat(amountIn) <= 0) {
+                showError('Please enter a valid amount');
+                return;
+            }
+
+            if (tokenIn === tokenOut) {
+                showError('Please select different tokens');
+                return;
+            }
+
+            try {
+                showLoading(true);
+                hideMessages();
+
+                // Call backend API for quote (keeping sensitive data server-side)
+                const quoteData = {
+                    assetIn: tokenIn,
+                    assetOut: tokenOut,
+                    amount: (parseFloat(amountIn) * 1000000).toString(), // Convert to stroops
+                    tradeType: 'EXACT_IN',
+                    protocols: ['soroswap', 'aqua'],
+                    network: currentNetwork
+                };
+
+                currentQuote = await callBackendAPI('/api/quote', quoteData);
+                
+                // Update UI with quote data
+                updateQuoteDisplay(currentQuote);
+                showQuote();
+                
+                document.getElementById('getQuoteBtn').style.display = 'none';
+                document.getElementById('swapBtn').style.display = 'block';
+
+            } catch (error) {
+                showError('Failed to get quote: ' + error.message);
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        async function executeSwap() {
+            if (!currentQuote) {
+                showError('No quote available');
+                return;
+            }
+
+            try {
+                showLoading(true);
+                hideMessages();
+
+                // In a real implementation, you would:
+                // 1. Connect to user's wallet
+                // 2. Sign the transaction XDR from the quote
+                // 3. Send the signed transaction to your backend
+
+                // Simulate wallet signing
+                await new Promise(resolve => setTimeout(resolve, 2000));
+                const signedXdr = 'SIGNED_' + currentQuote.xdr;
+
+                // Send signed transaction through backend
+                const result = await callBackendAPI('/api/send', { 
+                    xdr: signedXdr,
+                    network: currentNetwork 
+                });
+
+                showSuccess(`Swap successful! Transaction: ${result.hash.substring(0, 10)}...`);
+                
+                // Reset form
+                resetForm();
+
+            } catch (error) {
+                showError('Swap failed: ' + error.message);
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        function updateQuoteDisplay(quote) {
+            const expectedOutput = (parseFloat(quote.trade.expectedAmountOut) / 1000000).toFixed(6);
+            const priceImpact = (parseFloat(quote.priceImpact.numerator) / parseFloat(quote.priceImpact.denominator) * 100).toFixed(2);
+            
+            document.getElementById('expectedOutput').textContent = expectedOutput;
+            document.getElementById('priceImpact').textContent = priceImpact + '%';
+            document.getElementById('route').textContent = 'Soroswap → Aqua';
+            document.getElementById('amountOut').value = expectedOutput;
+        }
+
+        function showQuote() {
+            document.getElementById('quoteInfo').classList.add('show');
+        }
+
+        function hideQuote() {
+            document.getElementById('quoteInfo').classList.remove('show');
+            document.getElementById('getQuoteBtn').style.display = 'block';
+            document.getElementById('swapBtn').style.display = 'none';
+            currentQuote = null;
+        }
+
+        function showLoading(isLoading) {
+            document.querySelector('.widget-container').classList.toggle('loading', isLoading);
+        }
+
+        function showError(message) {
+            const errorEl = document.getElementById('errorMessage');
+            errorEl.textContent = message;
+            errorEl.style.display = 'block';
+        }
+
+        function showSuccess(message) {
+            const successEl = document.getElementById('successMessage');
+            successEl.textContent = message;
+            successEl.style.display = 'block';
+        }
+
+        function hideMessages() {
+            document.getElementById('errorMessage').style.display = 'none';
+            document.getElementById('successMessage').style.display = 'none';
+        }
+
+        function resetForm() {
+            document.getElementById('amountIn').value = '';
+            document.getElementById('amountOut').value = '';
+            hideQuote();
+            hideMessages();
+        }
+
+        // Auto-hide messages after 5 seconds
+        setInterval(() => {
+            if (document.getElementById('successMessage').style.display === 'block') {
+                setTimeout(hideMessages, 5000);
+            }
+        }, 1000);
+
+        // Add real-time quote updates
+        document.getElementById('amountIn').addEventListener('input', () => {
+            if (currentQuote) {
+                hideQuote();
+            }
+        });
+    </script>
+</body>
+</html> 

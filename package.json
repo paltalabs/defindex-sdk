@@ -1,0 +1,67 @@
+{
+  "name": "@soroswap/sdk",
+  "version": "1.0.0",
+  "description": "Official TypeScript SDK for Soroswap.Finance API - DEX and exchange aggregator on Stellar",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist/**/*",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "build:watch": "tsc --watch",
+    "test": "jest",
+    "test:unit": "jest",
+    "test:integration": "jest --config=jest.integration.config.js",
+    "test:all": "pnpm run test:unit && pnpm run test:integration",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
+    "lint": "eslint src/**/*.ts",
+    "lint:fix": "eslint src/**/*.ts --fix",
+    "prepare": "pnpm run build",
+    "prepublishOnly": "pnpm test && pnpm run lint",
+    "clean": "rimraf dist"
+  },
+  "keywords": [
+    "soroswap",
+    "stellar",
+    "soroban",
+    "dex",
+    "defi",
+    "aggregator",
+    "swap",
+    "liquidity",
+    "sdk",
+    "typescript"
+  ],
+  "author": "Soroswap Team",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/soroswap/sdk.git"
+  },
+  "bugs": {
+    "url": "https://github.com/soroswap/sdk/issues"
+  },
+  "homepage": "https://soroswap.finance",
+  "devDependencies": {
+    "@types/jest": "^30.0.0",
+    "@types/node": "^24.0.4",
+    "@typescript-eslint/eslint-plugin": "^8.35.0",
+    "@typescript-eslint/parser": "^8.35.0",
+    "dotenv": "^16.5.0",
+    "eslint": "^9.29.0",
+    "jest": "^30.0.3",
+    "rimraf": "^6.0.1",
+    "ts-jest": "^29.4.0",
+    "typescript": "^5.8.3"
+  },
+  "dependencies": {
+    "axios": "^1.10.0"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  }
+}
