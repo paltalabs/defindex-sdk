@@ -1,5 +1,5 @@
 import { SoroswapSDK } from '../src';
-import { QuoteDto, QuoteResponse, TradeType } from '../src/types';
+import { QuoteRequest, QuoteResponse, SupportedProtocols, TradeType } from '../src/types';
 
 describe('SoroswapSDK - Quote Functions', () => {
   let sdk: SoroswapSDK;
@@ -16,12 +16,12 @@ describe('SoroswapSDK - Quote Functions', () => {
 
   describe('quote', () => {
     it('should get quote for swap', async () => {
-      const mockQuoteRequest: QuoteDto = {
+      const mockQuoteRequest: QuoteRequest = {
         assetIn: 'CAS3J7GYLGXMF6TDJBBYYSE3HQ6BBSMLNUQ34T6TZMYMW2EVH34XOWMA',
         assetOut: 'CDTKPWPLOURQA2SGTKTUQOWRCBZEORB4BWBOMJ3D3ZTQQSGE5F6JBQLV',
-        amount: '10000000',
+        amount: 10000000n,
         tradeType: 'EXACT_IN' as TradeType,
-        protocols: ['soroswap', 'aqua']
+        protocols: ['soroswap', 'aqua'] as SupportedProtocols[]
       };
 
       const mockQuoteResponse: QuoteResponse = {
