@@ -1,11 +1,10 @@
 import { TokenCache } from '../cache/token-cache';
 import { HttpClient } from '../clients/http-client';
-import { 
-  AuthLoginDto, 
-  AuthRegisterDto, 
-  AuthResponse, 
+import {
+  AuthLoginDto,
+  AuthRegisterDto,
+  AuthResponse,
   TokenData,
-  APIError 
 } from '../types';
 
 /**
@@ -46,6 +45,7 @@ export class AuthManager {
           return token;
         }
       } catch (error) {
+        console.log("🚀 | getValidAccessToken | error:", error)
         // Token refresh failed, attempting new login
       }
     }
@@ -173,6 +173,7 @@ export class AuthManager {
       try {
         return await this.getValidAccessToken();
       } catch (error) {
+        console.log("🚀 | return | error:", error)
         return null;
       }
     };
