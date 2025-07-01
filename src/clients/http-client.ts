@@ -1,6 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios';
-import { APIError, Network } from '../types';
 
 /**
  * HTTP client wrapper with automatic authentication and error handling
@@ -56,7 +55,7 @@ export class HttpClient {
   /**
    * Transform axios error to APIError
    */
-  private transformError(error: any): APIError {
+  private transformError(error: any) {
     if (error.response) {
       // Server responded with error status
       return {
@@ -96,29 +95,6 @@ export class HttpClient {
   async post<T>(url: string, data?: any, config?: AxiosRequestConfig): Promise<T> {
     const response: AxiosResponse<T> = await this.client.post(url, data, config);
     return response.data;
-  }
-
-  /**
-   * PUT request
-   */
-  async put<T>(url: string, data?: any, config?: AxiosRequestConfig): Promise<T> {
-    const response: AxiosResponse<T> = await this.client.put(url, data, config);
-    return response.data;
-  }
-
-  /**
-   * DELETE request
-   */
-  async delete<T>(url: string, config?: AxiosRequestConfig): Promise<T> {
-    const response: AxiosResponse<T> = await this.client.delete(url, config);
-    return response.data;
-  }
-
-  /**
-   * Build query parameters for network
-   */
-  buildNetworkQuery(network?: Network): { network?: Network } {
-    return network ? { network } : {};
   }
 
   /**

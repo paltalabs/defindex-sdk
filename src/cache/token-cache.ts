@@ -1,16 +1,16 @@
-import { TokenData } from '../types';
+import { JWTData } from '../types';
 
 /**
  * In-memory token cache with automatic expiration handling
  * Stores access and refresh tokens with timestamps
  */
 export class TokenCache {
-  private tokenData: TokenData | null = null;
+  private tokenData: JWTData | null = null;
 
   /**
    * Store token data in cache
    */
-  setTokens(tokenData: TokenData): void {
+  setTokens(tokenData: JWTData): void {
     this.tokenData = tokenData;
   }
 

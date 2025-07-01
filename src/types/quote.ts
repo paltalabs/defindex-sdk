@@ -15,10 +15,14 @@ export interface QuoteRequest {
 }
 
 export interface BuildQuoteRequest {
-  quote: BuildSplitTradeReturn | BuildTradeReturn;
+  quote: QuoteResponse;
   from?: string;
   to?: string;
   referralId?: string;
+}
+
+export interface BuildQuoteResponse {
+  xdr: string;
 }
 
 export interface CommonBuildTradeReturnFields {
@@ -34,7 +38,7 @@ export interface CommonBuildTradeReturnFields {
 }
 
 export interface ExactInBuildTradeReturn extends CommonBuildTradeReturnFields {
-  tradeType: 'EXACT_IN'
+  tradeType: TradeType.EXACT_IN
   trade: {
     amountIn: bigint
     amountOutMin: bigint
@@ -45,7 +49,7 @@ export interface ExactInBuildTradeReturn extends CommonBuildTradeReturnFields {
 }
 
 export interface ExactOutBuildTradeReturn extends CommonBuildTradeReturnFields {
-  tradeType: 'EXACT_OUT'
+  tradeType: TradeType.EXACT_OUT
   trade: {
     amountOut: bigint
     amountInMax: bigint
@@ -64,7 +68,7 @@ export interface DistributionReturn {
 }
 
 export interface ExactInSplitBuildTradeReturn extends CommonBuildTradeReturnFields {
-  tradeType: 'EXACT_IN'
+  tradeType: TradeType.EXACT_IN
   trade: {
     amountIn: bigint
     amountOutMin: bigint
@@ -74,7 +78,7 @@ export interface ExactInSplitBuildTradeReturn extends CommonBuildTradeReturnFiel
 }
 
 export interface ExactOutSplitBuildTradeReturn extends CommonBuildTradeReturnFields {
-  tradeType: 'EXACT_OUT'
+  tradeType: TradeType.EXACT_OUT
   trade: {
     amountOut: bigint
     amountInMax: bigint
@@ -86,3 +90,5 @@ export interface ExactOutSplitBuildTradeReturn extends CommonBuildTradeReturnFie
 export type BuildTradeReturn = ExactInBuildTradeReturn | ExactOutBuildTradeReturn
 
 export type BuildSplitTradeReturn = ExactInSplitBuildTradeReturn | ExactOutSplitBuildTradeReturn
+
+export type QuoteResponse = BuildTradeReturn | BuildSplitTradeReturn

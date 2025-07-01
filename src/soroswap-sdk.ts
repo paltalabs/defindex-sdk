@@ -1,23 +1,23 @@
 import { AuthManager } from './auth/auth-manager';
 import { HttpClient } from './clients/http-client';
 import {
-  AddLiquidityDto,
-  AssetListDetail,
-  AssetListMetadata,
-  BuildQuoteDto,
-  ContractResponse,
-  Network,
+  AddLiquidityRequest,
+  AssetList,
+  AssetListInfo,
+  BuildQuoteRequest,
+  BuildQuoteResponse,
+  LiquidityResponse,
   Pool,
   PriceData,
   QuoteRequest,
   QuoteResponse,
-  RemoveLiquidityDto,
-  SendResponse,
-  SendXdrDto,
+  RemoveLiquidityRequest,
   SoroswapSDKConfig,
   SupportedAssetLists,
+  SupportedNetworks,
   UserPosition
 } from './types';
+import { SendRequest } from './types/send';
 
 /**
  * Main Soroswap SDK class
@@ -26,7 +26,7 @@ import {
 export class SoroswapSDK {
   private authManager: AuthManager;
   private httpClient: HttpClient;
-  private defaultNetwork: Network;
+  private defaultNetwork: SupportedNetworks;
 
   constructor(config: SoroswapSDKConfig) {
     this.defaultNetwork = config.defaultNetwork || 'mainnet';
@@ -61,10 +61,10 @@ export class SoroswapSDK {
    * Get contract address for a specific network and contract name
    */
   async getContractAddress(
-    network: Network,
+    network: SupportedNetworks,
     contractName: 'factory' | 'router' | 'aggregator'
-  ): Promise<ContractResponse> {
-    return this.httpClient.get<ContractResponse>(`/api/${network}/${contractName}`);
+  ): Promise<{address: string}> {
+    return this.httpClient.get<{address: string}>(`/api/${network}/${contractName}`);
   }
 
   // ========================================
@@ -74,8 +74,8 @@ export class SoroswapSDK {
   /**
    * Get available protocols for trading
    */
-  async getProtocols(network?: Network): Promise<string[]> {
-    const params = this.httpClient.buildNetworkQuery(network || this.defaultNetwork);
+  async getProtocols(network?: SupportedNetworks): Promise<string[]> {
+    const params = { network: network || this.defaultNetwork };
     const url = this.httpClient.buildUrlWithQuery('/protocols', params);
     return this.httpClient.get<string[]>(url);
   }
@@ -83,30 +83,30 @@ export class SoroswapSDK {
   /**
    * Get quote for a swap
    */
-  async quote(quoteRequest: QuoteRequest, network?: Network): Promise<QuoteResponse> {
-    const params = this.httpClient.buildNetworkQuery(network || this.defaultNetwork);
+  async quote(quoteRequest: QuoteRequest, network?: SupportedNetworks): Promise<QuoteResponse> {
+    const params = { network: network || this.defaultNetwork };
     const url = this.httpClient.buildUrlWithQuery('/quote', params);
     return this.httpClient.post<QuoteResponse>(url, quoteRequest);
   }
 
   /**
-   * Get quote for a swap
+   * This builds the quote into an XDR transaction
    */
-  async build(buildQuoteRequest: BuildQuoteDto, network?: Network): Promise<QuoteResponse> {
-    const params = this.httpClient.buildNetworkQuery(network || this.defaultNetwork);
+  async build(buildQuoteRequest: BuildQuoteRequest, network?: SupportedNetworks): Promise<BuildQuoteResponse> {
+    const params = { network: network || this.defaultNetwork };
     const url = this.httpClient.buildUrlWithQuery('/quote/build', params);
-    return this.httpClient.post<QuoteResponse>(url, buildQuoteRequest);
+    return this.httpClient.post<BuildQuoteResponse>(url, buildQuoteRequest);
   }
 
   /**
    * Send signed transaction
    */
-  async send(xdr: string, fee: number = 100, network?: Network): Promise<SendResponse> {
-    const params = this.httpClient.buildNetworkQuery(network || this.defaultNetwork);
+  async send(xdr: string, launchtube: boolean = false, network?: SupportedNetworks): Promise<any> {
+    const params = { network: network || this.defaultNetwork };
     const url = this.httpClient.buildUrlWithQuery('/send', params);
     
-    const sendData: SendXdrDto = { xdr, fee };
-    return this.httpClient.post<SendResponse>(url, sendData);
+    const sendData: SendRequest = { xdr, launchtube };
+    return this.httpClient.post<any>(url, sendData);
   }
 
   // ========================================
@@ -117,7 +117,7 @@ export class SoroswapSDK {
    * Get pools for specific protocols
    */
   async getPools(
-    network: Network,
+    network: SupportedNetworks,
     protocols: string[],
     assetList?: SupportedAssetLists[]
   ): Promise<Pool[]> {
@@ -138,9 +138,9 @@ export class SoroswapSDK {
    * Get pool for specific token pair
    */
   async getPoolByTokens(
-    tokenA: string,
-    tokenB: string,
-    network: Network,
+    assetA: string,
+    assetB: string,
+    network: SupportedNetworks,
     protocols: string[]
   ): Promise<Pool[]> {
     const params = {
@@ -148,7 +148,7 @@ export class SoroswapSDK {
       protocol: protocols
     };
 
-    const url = this.httpClient.buildUrlWithQuery(`/pools/${tokenA}/${tokenB}`, params);
+    const url = this.httpClient.buildUrlWithQuery(`/pools/${assetA}/${assetB}`, params);
     return this.httpClient.get<Pool[]>(url);
   }
 
@@ -160,24 +160,24 @@ export class SoroswapSDK {
    * Add liquidity to a pool
    */
   async addLiquidity(
-    liquidityData: AddLiquidityDto,
-    network?: Network
-  ): Promise<{ xdr: string; poolInfo: any }> {
-    const params = this.httpClient.buildNetworkQuery(network || this.defaultNetwork);
+    liquidityData: AddLiquidityRequest,
+    network?: SupportedNetworks
+  ): Promise<LiquidityResponse> {
+    const params = { network: network || this.defaultNetwork };
     const url = this.httpClient.buildUrlWithQuery('/liquidity/add', params);
-    return this.httpClient.post(url, liquidityData);
+    return this.httpClient.post<LiquidityResponse>(url, liquidityData);
   }
 
   /**
    * Remove liquidity from a pool
    */
   async removeLiquidity(
-    liquidityData: RemoveLiquidityDto,
-    network?: Network
-  ): Promise<{ xdr: string; poolInfo: any }> {
-    const params = this.httpClient.buildNetworkQuery(network || this.defaultNetwork);
+    liquidityData: RemoveLiquidityRequest,
+    network?: SupportedNetworks
+  ): Promise<LiquidityResponse> {
+    const params = { network: network || this.defaultNetwork };
     const url = this.httpClient.buildUrlWithQuery('/liquidity/remove', params);
-    return this.httpClient.post(url, liquidityData);
+    return this.httpClient.post<LiquidityResponse>(url, liquidityData);
   }
 
   /**
@@ -185,9 +185,9 @@ export class SoroswapSDK {
    */
   async getUserPositions(
     address: string,
-    network?: Network
+    network?: SupportedNetworks
   ): Promise<UserPosition[]> {
-    const params = this.httpClient.buildNetworkQuery(network || this.defaultNetwork);
+    const params = { network: network || this.defaultNetwork };
     const url = this.httpClient.buildUrlWithQuery(`/liquidity/positions/${address}`, params);
     return this.httpClient.get<UserPosition[]>(url);
   }
@@ -199,14 +199,14 @@ export class SoroswapSDK {
   /**
    * Get asset lists metadata or specific asset list
    */
-  async getAssetList(name?: SupportedAssetLists): Promise<AssetListMetadata[] | AssetListDetail> {
+  async getAssetList(name?: SupportedAssetLists): Promise<AssetList[] | AssetListInfo[]> {
     const params = name ? { name } : {};
     const url = this.httpClient.buildUrlWithQuery('/asset-list', params);
     
     if (name) {
-      return this.httpClient.get<AssetListDetail>(url);
+      return this.httpClient.get<AssetList[]>(url);
     } else {
-      return this.httpClient.get<AssetListMetadata[]>(url);
+      return this.httpClient.get<AssetListInfo[]>(url);
     }
   }
 
@@ -215,34 +215,14 @@ export class SoroswapSDK {
    */
   async getPrice(
     assets: string | string[],
-    network?: Network,
-    referenceCurrency: string = 'USD'
+    network?: SupportedNetworks,
   ): Promise<PriceData[]> {
     const params = {
       network: network || this.defaultNetwork,
       asset: Array.isArray(assets) ? assets : [assets],
-      referenceCurrency
     };
 
     const url = this.httpClient.buildUrlWithQuery('/price', params);
     return this.httpClient.get<PriceData[]>(url);
-  }
-
-  // ========================================
-  // Utility Methods
-  // ========================================
-
-  /**
-   * Set default network for operations
-   */
-  setDefaultNetwork(network: Network): void {
-    this.defaultNetwork = network;
-  }
-
-  /**
-   * Get current default network
-   */
-  getDefaultNetwork(): Network {
-    return this.defaultNetwork;
   }
 } 

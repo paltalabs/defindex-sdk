@@ -2,9 +2,8 @@ import { TokenCache } from '../cache/token-cache';
 import { HttpClient } from '../clients/http-client';
 import {
   AuthLoginDto,
-  AuthRegisterDto,
   AuthResponse,
-  TokenData,
+  JWTData,
 } from '../types';
 
 /**
@@ -70,12 +69,20 @@ export class AuthManager {
     try {
       const response: AuthResponse = await this.httpClient.post('/login', this.credentials);
       
+      //TODO: Get expiration from jwt
+      // {
+      //   "sub": 1,
+      //   "email": "dev@paltalabs.io",
+      //   "role": "ADMIN",
+      //   "iat": 1751307940,
+      //   "exp": 1751308840
+      // }
       // Calculate expiration time (assume 1 hour if not provided)
       const expiresIn = 60 * 60 * 1000; // 1 hour in milliseconds
       const expiresAt = Date.now() + expiresIn;
 
       // Store tokens in cache
-      const tokenData: TokenData = {
+      const tokenData: JWTData = {
         access_token: response.access_token,
         refresh_token: response.refresh_token,
         expires_at: expiresAt,
@@ -89,17 +96,6 @@ export class AuthManager {
       this.tokenCache.clear();
       throw error;
     }
-  }
-
-  /**
-   * Register new user
-   */
-  async register(userData: AuthRegisterDto): Promise<{ message: string }> {
-    if (!this.httpClient) {
-      throw new Error('HTTP client not initialized');
-    }
-
-    return this.httpClient.post('/register', userData);
   }
 
   /**
@@ -128,7 +124,7 @@ export class AuthManager {
       const expiresAt = Date.now() + expiresIn;
 
       // Update tokens in cache
-      const tokenData: TokenData = {
+      const tokenData: JWTData = {
         access_token: response.access_token,
         refresh_token: response.refresh_token,
         expires_at: expiresAt,

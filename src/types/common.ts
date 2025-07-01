@@ -1,5 +1,8 @@
 // Trade types
-export type TradeType = 'EXACT_IN' | 'EXACT_OUT';
+export enum TradeType {
+  EXACT_IN = 'EXACT_IN',
+  EXACT_OUT = 'EXACT_OUT',
+}
 
 // Asset list types
 export enum SupportedAssetLists {
@@ -26,4 +29,11 @@ export enum SupportedProtocols {
   AQUA = 'aqua',
   COMET = 'comet',
   SDEX = 'sdex',
+}
+
+export interface SoroswapSDKConfig {
+  email: string;
+  password: string;
+  defaultNetwork: SupportedNetworks;
+  timeout: number;
 }
