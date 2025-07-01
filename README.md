@@ -5,12 +5,12 @@ Official TypeScript SDK for [Soroswap.Finance](https://soroswap.finance) - The f
 ## 🌟 Features
 
 - **🔐 Automatic Authentication**: Handles login, token refresh, and session management
-- **💱 Trading Operations**: Get quotes, send transactions, and access multiple protocols
+- **💱 Trading Operations**: Get quotes, build transactions, send them to the network
 - **💧 Liquidity Management**: Add/remove liquidity and track positions
 - **📊 Market Data**: Access pools, prices, and asset information
 - **🔒 Server-Side Focused**: Secure handling of credentials and sensitive operations
 - **📝 TypeScript Support**: Full type safety with comprehensive interfaces
-- **⚡ Token Caching**: In-memory token management with automatic refresh
+- **⚡ Access Token Caching**: In-memory access token management with automatic refresh
 - **🧪 Well Tested**: Comprehensive unit test coverage
 
 ## 🚀 Installation
@@ -22,32 +22,36 @@ pnpm install soroswap-sdk
 ## 📖 Quick Start
 
 ```typescript
-import { SoroswapSDK } from 'soroswap-sdk';
+import { SoroswapSDK, SupportedNetworks, SupportedProtocols, TradeType } from '@soroswap/sdk';
 
 // Initialize the SDK
 const soroswapClient = new SoroswapSDK({
   email: 'your-email@example.com',
-  password: 'your-password',
-  defaultNetwork: 'mainnet', // or 'testnet'
+  password: 'your-password'
 });
 
 // Get a quote for a swap
 const quote = await soroswapClient.quote({
   assetIn: 'CAS3J7GYLGXMF6TDJBBYYSE3HQ6BBSMLNUQ34T6TZMYMW2EVH34XOWMA',
   assetOut: 'CDTKPWPLOURQA2SGTKTUQOWRCBZEORB4BWBOMJ3D3ZTQQSGE5F6JBQLV',
-  amount: '10000000',
-  tradeType: 'EXACT_IN',
-  protocols: ['soroswap', 'aqua'],
+  amount: 10000000n, // Note: Amount must be a BigInt
+  tradeType: TradeType.EXACT_IN,
+  protocols: [SupportedProtocols.SDEX, SupportedProtocols.SOROSWAP, SupportedProtocols.AQUA],
+});
+
+// Build the transaction XDR from the quote
+const buildResponse = await soroswapClient.build({
+  quote,
   from: 'YOUR_WALLET_ADDRESS',
   to: 'RECIPIENT_ADDRESS'
 });
 
 // Sign the transaction with your preferred signer
-const signedXdr = await yourSigner.sign(quote.xdr);
+const signedXdr = await yourSigner.sign(buildResponse.xdr);
 
 // Send the signed transaction
-const result = await soroswapClient.send(signedXdr, 100);
-console.log('Transaction hash:', result.hash);
+const result = await soroswapClient.send(signedXdr, false); // launchtube = false
+console.log('Transaction result:', result);
 ```
 
 ## 🔧 Configuration
@@ -56,10 +60,10 @@ console.log('Transaction hash:', result.hash);
 
 ```typescript
 interface SoroswapSDKConfig {
-  email: string;              // Your Soroswap account email
-  password: string;           // Your Soroswap account password
-  defaultNetwork?: Network;  // 'mainnet' | 'testnet' (defaults to 'mainnet')
-  timeout?: number;          // Request timeout in ms (defaults to 30000)
+  email: string;                    // Your Soroswap account email
+  password: string;                 // Your Soroswap account password
+  defaultNetwork?: SupportedNetworks;  // SupportedNetworks.MAINNET | SupportedNetworks.TESTNET
+  timeout?: number;                // Request timeout in ms (defaults to 30000) you might want to adjust this if using launchtube
 }
 ```
 
@@ -68,10 +72,12 @@ interface SoroswapSDKConfig {
 For better security, you can use environment variables:
 
 ```typescript
-const sdk = new SoroswapSDK({
+const soroswapClient = new SoroswapSDK({
   email: process.env.SOROSWAP_EMAIL!,
   password: process.env.SOROSWAP_PASSWORD!,
-  defaultNetwork: process.env.NODE_ENV === 'production' ? 'mainnet' : 'testnet'
+  defaultNetwork: process.env.NODE_ENV === 'production' 
+    ? SupportedNetworks.MAINNET 
+    : SupportedNetworks.TESTNET
 });
 ```
 
@@ -79,24 +85,11 @@ const sdk = new SoroswapSDK({
 
 ### Authentication
 
-The SDK handles authentication automatically, but you can also manage it manually:
+The SDK handles authentication automatically:
 
 ```typescript
 // Check authentication status
-const isAuth = sdk.isAuthenticated();
-
-// Get user information
-const userInfo = sdk.getUserInfo();
-
-// Logout (clears tokens)
-sdk.logout();
-
-// Register a new user
-await sdk.register({
-  username: 'newuser',
-  email: 'user@example.com',
-  password: 'SecurePassword123!'
-});
+const isAuth = soroswapClient.isAuthenticated();
 ```
 
 ### Trading Operations
@@ -104,30 +97,48 @@ await sdk.register({
 #### Get Available Protocols
 
 ```typescript
-const protocols = await sdk.getProtocols('mainnet');
-// Returns: ['soroswap', 'phoenix', 'aqua']
+const protocols = await soroswapClient.getProtocols(SupportedNetworks.MAINNET);
+// Returns: ['sdex', 'soroswap', 'phoenix', 'aqua']
 ```
 
 #### Get Quote
 
 ```typescript
-const quote = await sdk.quote({
+const quote = await soroswapClient.quote({
   assetIn: 'TOKEN_A_CONTRACT',
   assetOut: 'TOKEN_B_CONTRACT',
-  amount: '1000000',
-  tradeType: 'EXACT_IN',
-  protocols: ['soroswap', 'aqua'],
+  amount: 1000000n, // BigInt required
+  tradeType: TradeType.EXACT_IN,
+  protocols: [SupportedProtocols.SOROSWAP, SupportedProtocols.AQUA],
   slippageTolerance: '50', // 0.5% in basis points
   maxHops: 2,
   feeBps: 30, // Optional fee in basis points
-  referralId: 'REFERRAL_WALLET_ADDRESS' // Required if feeBps is provided
 });
+```
+
+#### Build Transaction
+
+After getting a quote, build the transaction XDR:
+
+```typescript
+const buildResponse = await soroswapClient.build({
+  quote: quote,
+  from: 'YOUR_WALLET_ADDRESS',
+  to: 'RECIPIENT_ADDRESS', // Optional, defaults to 'from'
+  referralId: 'REFERRAL_WALLET_ADDRESS' // Required if quote includes feeBps
+});
+
+// buildResponse.xdr contains the transaction ready for signing
 ```
 
 #### Send Signed Transaction
 
 ```typescript
-const result = await sdk.send(signedXdr, 100); // fee in stroops
+const result = await soroswapClient.send(
+  signedXdr,           // The signed transaction XDR
+  false,               // launchtube: boolean (default false)
+  SupportedNetworks.MAINNET  // Optional network override
+);
 ```
 
 ### Pool Operations
@@ -136,18 +147,18 @@ const result = await sdk.send(signedXdr, 100); // fee in stroops
 
 ```typescript
 // Get all pools for specific protocols
-const pools = await sdk.getPools(
-  'mainnet',
-  ['soroswap', 'aqua'],
-  ['SOROSWAP', 'STELLAR_EXPERT'] // Optional asset list filter
+const pools = await soroswapClient.getPools(
+  SupportedNetworks.MAINNET,
+  [SupportedProtocols.SOROSWAP, SupportedProtocols.AQUA],
+  [SupportedAssetLists.SOROSWAP] // Optional asset list filter
 );
 
 // Get specific pool for token pair
-const pool = await sdk.getPoolByTokens(
+const pool = await soroswapClient.getPoolByTokens(
   'TOKEN_A_CONTRACT',
   'TOKEN_B_CONTRACT',
-  'mainnet',
-  ['soroswap']
+  SupportedNetworks.MAINNET,
+  [SupportedProtocols.SOROSWAP]
 );
 ```
 
@@ -155,25 +166,46 @@ const pool = await sdk.getPoolByTokens(
 
 #### Add Liquidity
 
-```typescript
-const addLiquidityTx = await sdk.addLiquidity({
-  assetA: 'TOKEN_A_CONTRACT',
-  assetB: 'TOKEN_B_CONTRACT',
-  amountA: '1000000',
-  amountB: '2000000',
-  to: 'YOUR_WALLET_ADDRESS',
-  slippageTolerance: '50' // 0.5%
-});
+**Important**: Before adding liquidity, you should fetch the existing pool to calculate the proper token proportions. The amounts must maintain the current pool ratio, otherwise the transaction will fail during simulation.
 
-// Sign and send the transaction
-const signedXdr = await yourSigner.sign(addLiquidityTx.xdr);
-const result = await sdk.send(signedXdr, 100);
+```typescript
+// First, get the current pool to understand the ratio
+const pools = await soroswapClient.getPoolByTokens(
+  'TOKEN_A_CONTRACT',
+  'TOKEN_B_CONTRACT',
+  SupportedNetworks.MAINNET,
+  [SupportedProtocols.SOROSWAP]
+);
+
+if (pools.length > 0) {
+  const pool = pools[0];
+  const ratio = Number(pool.reserveB) / Number(pool.reserveA);
+  
+  // Calculate proportional amounts
+  const amountA = '1000000';
+  const amountB = (Number(amountA) * ratio).toString();
+  
+  const addLiquidityTx = await soroswapClient.addLiquidity({
+    assetA: 'TOKEN_A_CONTRACT',
+    assetB: 'TOKEN_B_CONTRACT',
+    amountA: amountA,
+    amountB: amountB,
+    to: 'YOUR_WALLET_ADDRESS',
+    slippageTolerance: '50' // 0.5%
+  });
+
+  // Sign and send the transaction
+  const signedXdr = await yourSigner.sign(addLiquidityTx.xdr);
+  const result = await soroswapClient.send(signedXdr, false);
+}
 ```
+
+> **Note**: All liquidity transactions are simulated before execution. If the amounts don't match the required proportions or if there are insufficient funds, the transaction will return an error during simulation.
 
 #### Remove Liquidity
 
 ```typescript
-const removeLiquidityTx = await sdk.removeLiquidity({
+const removeLiquidityTx = await soroswapClient.removeLiquidity({
   assetA: 'TOKEN_A_CONTRACT',
   assetB: 'TOKEN_B_CONTRACT',
   liquidity: '500000',
@@ -187,9 +219,9 @@ const removeLiquidityTx = await sdk.removeLiquidity({
 #### Get User Positions
 
 ```typescript
-const positions = await sdk.getUserPositions(
+const positions = await soroswapClient.getUserPositions(
   'USER_WALLET_ADDRESS',
-  'mainnet'
+  SupportedNetworks.MAINNET
 );
 ```
 
@@ -199,49 +231,36 @@ const positions = await sdk.getUserPositions(
 
 ```typescript
 // Single asset price
-const price = await sdk.getPrice(
+const prices = await soroswapClient.getPrice(
   'TOKEN_CONTRACT_ADDRESS',
-  'mainnet',
-  'USD'
+  SupportedNetworks.MAINNET
 );
 
 // Multiple asset prices
-const prices = await sdk.getPrice([
+const prices = await soroswapClient.getPrice([
   'TOKEN_A_CONTRACT',
   'TOKEN_B_CONTRACT'
-], 'mainnet', 'USD');
+], SupportedNetworks.MAINNET);
 ```
 
 #### Get Asset Lists
 
 ```typescript
-// Get all available asset lists
-const assetLists = await sdk.getAssetList();
+// Get all available asset lists metadata
+const assetListsInfo = await soroswapClient.getAssetList();
 
 // Get specific asset list
-const soroswapAssets = await sdk.getAssetList('SOROSWAP');
+const soroswapAssets = await soroswapClient.getAssetList(SupportedAssetLists.SOROSWAP);
 ```
 
 ### System Information
 
-#### Health Check
-
-```typescript
-const health = await sdk.checkHealth();
-```
-
 #### Get Contract Addresses
 
 ```typescript
-const factoryAddress = await sdk.getContractAddress('mainnet', 'factory');
-const routerAddress = await sdk.getContractAddress('mainnet', 'router');
-const aggregatorAddress = await sdk.getContractAddress('mainnet', 'aggregator');
-```
-
-#### Get Testnet Tokens
-
-```typescript
-const testnetTokens = await sdk.getTokens();
+const factoryAddress = await soroswapClient.getContractAddress(SupportedNetworks.MAINNET, 'factory');
+const routerAddress = await soroswapClient.getContractAddress(SupportedNetworks.MAINNET, 'router');
+const aggregatorAddress = await soroswapClient.getContractAddress(SupportedNetworks.MAINNET, 'aggregator');
 ```
 
 ## 🔐 Security Best Practices
@@ -253,10 +272,11 @@ const testnetTokens = await sdk.getTokens();
 
 ```typescript
 try {
-  const quote = await sdk.quote(quoteParams);
+  const quote = await soroswapClient.quote(quoteParams);
+  const buildResponse = await soroswapClient.build({ quote, from: walletAddress });
   // Handle success
 } catch (error) {
-  console.error('Quote failed:', error.message);
+  console.error('Quote/build failed:', error.message);
   // Handle error
 }
 ```
@@ -321,12 +341,22 @@ While this SDK is server-side focused, you can create secure frontend integratio
 // Backend API endpoint
 app.post('/api/quote', async (req, res) => {
   try {
-    const quote = await soroswapSDK.quote(req.body);
+    const quote = await soroswapClient.quote(req.body);
+    const buildResponse = await soroswapClient.build({
+      quote,
+      from: req.body.walletAddress
+    });
+    
     // Only return the XDR and quote data, not sensitive info
     res.json({
-      xdr: quote.xdr,
-      trade: quote.trade,
-      priceImpact: quote.priceImpact
+      xdr: buildResponse.xdr,
+      quote: {
+        trade: quote.trade,
+        priceImpact: quote.priceImpact,
+        assetIn: quote.assetIn,
+        assetOut: quote.assetOut,
+        tradeType: quote.tradeType
+      }
     });
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -334,7 +364,7 @@ app.post('/api/quote', async (req, res) => {
 });
 
 // Frontend widget
-async function getQuote(quoteParams) {
+async function getQuoteAndBuild(quoteParams) {
   const response = await fetch('/api/quote', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -350,25 +380,51 @@ The SDK exports comprehensive TypeScript types:
 
 ```typescript
 import {
+  SoroswapSDK,
   SoroswapSDKConfig,
-  Network,
+  SupportedNetworks,
+  SupportedProtocols,
+  SupportedAssetLists,
   TradeType,
-  QuoteDto,
+  QuoteRequest,
   QuoteResponse,
+  BuildQuoteRequest,
+  BuildQuoteResponse,
   Pool,
   UserPosition,
   PriceData,
+  AssetList,
+  AssetListInfo,
   // ... and many more
 } from 'soroswap-sdk';
 ```
 
-## 🤝 Contributing
+### Example: Working with Types
 
-We welcome contributions! Please read our contributing guidelines and submit pull requests to help improve the SDK.
+```typescript
+import { 
+  QuoteRequest, 
+  TradeType, 
+  SupportedProtocols,
+  ExactInBuildTradeReturn 
+} from 'soroswap-sdk';
 
-## 📄 License
+const quoteRequest: QuoteRequest = {
+  assetIn: 'TOKEN_A',
+  assetOut: 'TOKEN_B',
+  amount: 1000000n,
+  tradeType: TradeType.EXACT_IN,
+  protocols: [SupportedProtocols.SOROSWAP]
+};
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+const quote = await soroswapClient.quote(quoteRequest);
+
+// Type-safe access to quote properties
+if (quote.tradeType === TradeType.EXACT_IN) {
+  const exactInQuote = quote as ExactInBuildTradeReturn;
+  console.log('Expected output:', exactInQuote.trade.expectedAmountOut);
+}
+```
 
 ## 🔗 Links
 
@@ -377,13 +433,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - [API Documentation](https://api.soroswap.finance)
 - [GitHub Repository](https://github.com/soroswap/sdk)
 
-## 📞 Support
-
-For support and questions:
-- Create an issue on [GitHub](https://github.com/soroswap/sdk/issues)
-- Join our [Discord community](https://discord.gg/soroswap)
-- Follow us on [Twitter](https://twitter.com/SoroswapFinance)
-
 ---
 
-Built with ❤️ by the Soroswap team for the Stellar ecosystem. 
+Built with ❤️ by the Soroswap team.
