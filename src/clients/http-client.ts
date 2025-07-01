@@ -21,6 +21,17 @@ export class HttpClient {
       headers: {
         'Content-Type': 'application/json',
       },
+      // Add custom transformRequest to handle BigInt serialization
+      transformRequest: [
+        (data: any) => {
+          if (data && typeof data === 'object') {
+            return JSON.stringify(data, (key, value) =>
+              typeof value === 'bigint' ? value.toString() : value
+            );
+          }
+          return data;
+        }
+      ],
     });
 
     // Add request interceptor to inject auth token

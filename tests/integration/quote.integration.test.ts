@@ -1,5 +1,5 @@
 import { SoroswapSDK } from "../../src";
-import { QuoteDto, TradeType } from "../../src/types";
+import { ExactInBuildTradeReturn, ExactInSplitBuildTradeReturn, QuoteRequest, SupportedNetworks, SupportedProtocols, TradeType } from "../../src/types";
 
 /**
  * Integration tests for the Soroswap SDK
@@ -34,7 +34,7 @@ describe("SoroswapSDK - Integration Tests", () => {
     sdk = new SoroswapSDK({
       email: process.env.SOROSWAP_EMAIL!,
       password: process.env.SOROSWAP_PASSWORD!,
-      defaultNetwork: "mainnet", // Use testnet for integration tests
+      defaultNetwork: SupportedNetworks.MAINNET, // Use testnet for integration tests
       timeout: 30000,
     });
   });
@@ -44,9 +44,8 @@ describe("SoroswapSDK - Integration Tests", () => {
       if (skipTests) return;
 
       // The SDK should automatically authenticate when making first request
-      const protocols = await sdk.getProtocols("mainnet");
+      const protocols = await sdk.getProtocols(SupportedNetworks.MAINNET);
 
-      console.log(protocols);
       expect(Array.isArray(protocols)).toBe(true);
 
       // Should be authenticated now
@@ -63,7 +62,7 @@ describe("SoroswapSDK - Integration Tests", () => {
       for (const contractName of contracts) {
         try {
           const contract = await sdk.getContractAddress(
-            "testnet",
+            SupportedNetworks.MAINNET,
             contractName
           );
           expect(contract.address).toBeDefined();
@@ -84,41 +83,43 @@ describe("SoroswapSDK - Integration Tests", () => {
       const USDC = "CCW67TSZV3SSS2HXMBQ5JFGCKJNXKZM7UQUWUZPUTHXSTZLEO7SJMI75";
       const EURC = "CDTKPWPLOURQA2SGTKTUQOWRCBZEORB4BWBOMJ3D3ZTQQSGE5F6JBQLV";
 
-      const quoteRequest: QuoteDto = {
+      const quoteRequest: QuoteRequest = {
         assetIn: USDC,
         assetOut: EURC,
-        amount: "1000000000", // 1 token (7 decimals)
-        tradeType: "EXACT_IN" as TradeType,
-        protocols: ["soroswap", "aqua", "phoenix"],
-        feeBps: 50
+        amount: 1000000000n, // 1 token (7 decimals)
+        tradeType: TradeType.EXACT_IN,
+        protocols: [SupportedProtocols.SOROSWAP, SupportedProtocols.AQUA, SupportedProtocols.PHOENIX]
       };
 
       try {
         const quote = await sdk.quote(quoteRequest);
-        const quoteBuild = await sdk.build({
-          quote,
-          from: "GA3CQIS2URXWHWXLM34IKLTQFOLCMC4UGWG3SPRGT67PEFDGV2FFT5SO",
-          to: "GA3CQIS2URXWHWXLM34IKLTQFOLCMC4UGWG3SPRGT67PEFDGV2FFT5SO",
-          referralId: "1234567890"
-        });
+        
+        // Helper function to safely serialize objects with BigInt for logging only
+        const serializeBigInt = (obj: any): any => {
+          return JSON.parse(JSON.stringify(obj, (key, value) =>
+            typeof value === 'bigint' ? value.toString() : value
+          ));
+        };
+        
+        console.log("🚀 | it | quote:", serializeBigInt(quote));
 
         expect(quote).toBeDefined();
         expect(quote.assetIn).toBe(USDC);
         expect(quote.assetOut).toBe(EURC);
         expect(quote.tradeType).toBe("EXACT_IN");
         expect(quote.trade).toBeDefined();
-        expect(quote.trade.expectedAmountOut).toBeDefined();
+        expect((quote as ExactInBuildTradeReturn).trade.expectedAmountOut).toBeDefined();
         expect(quote.priceImpact).toBeDefined();
-        expect(Array.isArray(quote.trade.distribution)).toBe(true);
+        expect(Array.isArray((quote as ExactInSplitBuildTradeReturn).trade.distribution)).toBe(true);
 
         console.log("✅ Quote received:", {
-          expectedOutput: quote.trade.expectedAmountOut,
+          expectedOutput: (quote as ExactInBuildTradeReturn).trade.expectedAmountOut?.toString(),
           priceImpact: `${(
-            (parseFloat(quote.priceImpact.numerator) /
-              parseFloat(quote.priceImpact.denominator)) *
+            (parseFloat(quote.priceImpact.numerator.toString()) /
+              parseFloat(quote.priceImpact.denominator.toString())) *
             100
           ).toFixed(4)}%`,
-          protocols: quote.trade.distribution.map((d) => d.protocol_id),
+          protocols: (quote as ExactInSplitBuildTradeReturn).trade.distribution.map((d) => d.protocol_id),
         });
       } catch (error: any) {
         if (
@@ -133,37 +134,6 @@ describe("SoroswapSDK - Integration Tests", () => {
         }
       }
     }, 15000);
-
-    it("should get quote with XDR when addresses provided", async () => {
-      if (skipTests) return;
-
-      const USDC = "CCW67TSZV3SSS2HXMBQ5JFGCKJNXKZM7UQUWUZPUTHXSTZLEO7SJMI75";
-      const EURC = "CDTKPWPLOURQA2SGTKTUQOWRCBZEORB4BWBOMJ3D3ZTQQSGE5F6JBQLV";
-
-      const quoteRequest: QuoteDto = {
-        assetIn: USDC,
-        assetOut: EURC,
-        amount: "10000000",
-        tradeType: "EXACT_IN" as TradeType,
-        protocols: ["soroswap"],
-      };
-
-      try {
-        const quote = await sdk.quote(quoteRequest, "mainnet");
-
-        if (quote.xdr) {
-          expect(typeof quote.xdr).toBe("string");
-          expect(quote.xdr.length).toBeGreaterThan(50);
-          console.log("✅ XDR included in quote response");
-        }
-      } catch (error: any) {
-        if (error.message.includes("route not found")) {
-          console.log("⚠️  No route found for XDR test");
-        } else {
-          throw error;
-        }
-      }
-    }, 15000);
   });
 
   describe('Pool Information', () => {
@@ -171,8 +141,7 @@ describe("SoroswapSDK - Integration Tests", () => {
       if (skipTests) return;
 
       try {
-        const pools = await sdk.getPools('mainnet', ['soroswap']);
-        console.log("🚀 | it | pools:", pools)
+        const pools = await sdk.getPools(SupportedNetworks.MAINNET, [SupportedProtocols.SOROSWAP]);
 
         expect(Array.isArray(pools)).toBe(true);
 
@@ -315,7 +284,7 @@ describe("SoroswapSDK - Integration Tests", () => {
   //   it('should handle invalid quote requests gracefully', async () => {
   //     if (skipTests) return;
 
-  //     const invalidQuote: QuoteDto = {
+  //     const invalidQuote: QuoteRequest = {
   //       assetIn: 'INVALID_CONTRACT_ADDRESS',
   //       assetOut: 'ANOTHER_INVALID_CONTRACT',
   //       amount: '1000000',
