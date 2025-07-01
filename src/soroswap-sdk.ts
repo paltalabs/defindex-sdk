@@ -29,7 +29,7 @@ export class SoroswapSDK {
   private defaultNetwork: SupportedNetworks;
 
   constructor(config: SoroswapSDKConfig) {
-    this.defaultNetwork = config.defaultNetwork || 'mainnet';
+    this.defaultNetwork = config.defaultNetwork || SupportedNetworks.MAINNET;
     
     // Initialize auth manager
     this.authManager = new AuthManager({

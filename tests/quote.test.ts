@@ -1,60 +1,61 @@
-// import { SoroswapSDK } from '../src';
-// import { QuoteRequest, QuoteResponse, SupportedProtocols, TradeType } from '../src/types';
+import { SoroswapSDK } from '../src';
+import { QuoteRequest, QuoteResponse, SupportedNetworks, SupportedPlatforms, SupportedProtocols, TradeType } from '../src/types';
 
-// describe('SoroswapSDK - Quote Functions', () => {
-//   let sdk: SoroswapSDK;
+describe('SoroswapSDK - Quote Functions', () => {
+  let sdk: SoroswapSDK;
 
-//   beforeEach(() => {
-//     jest.clearAllMocks();
+  beforeEach(() => {
+    jest.clearAllMocks();
     
-//     // Create SDK instance
-//     sdk = new SoroswapSDK({
-//       email: 'test@example.com',
-//       password: 'password123'
-//     });
-//   });
+    // Create SDK instance
+    sdk = new SoroswapSDK({
+      email: 'test@example.com',
+      password: 'password123'
+    });
+  });
 
-//   describe('quote', () => {
-//     it('should get quote for swap', async () => {
-//       const mockQuoteRequest: QuoteRequest = {
-//         assetIn: 'CAS3J7GYLGXMF6TDJBBYYSE3HQ6BBSMLNUQ34T6TZMYMW2EVH34XOWMA',
-//         assetOut: 'CDTKPWPLOURQA2SGTKTUQOWRCBZEORB4BWBOMJ3D3ZTQQSGE5F6JBQLV',
-//         amount: 10000000n,
-//         tradeType: 'EXACT_IN' as TradeType,
-//         protocols: ['soroswap', 'aqua'] as SupportedProtocols[]
-//       };
+  describe('quote', () => {
+    it('should get quote for swap', async () => {
+      const mockQuoteRequest: QuoteRequest = {
+        assetIn: 'CAS3J7GYLGXMF6TDJBBYYSE3HQ6BBSMLNUQ34T6TZMYMW2EVH34XOWMA',
+        assetOut: 'CDTKPWPLOURQA2SGTKTUQOWRCBZEORB4BWBOMJ3D3ZTQQSGE5F6JBQLV',
+        amount: 10000000n,
+        tradeType: 'EXACT_IN' as TradeType,
+        protocols: ['soroswap', 'aqua'] as SupportedProtocols[]
+      };
 
-//       const mockQuoteResponse: QuoteResponse = {
-//         assetIn: 'CAS3J7GYLGXMF6TDJBBYYSE3HQ6BBSMLNUQ34T6TZMYMW2EVH34XOWMA',
-//         assetOut: 'CDTKPWPLOURQA2SGTKTUQOWRCBZEORB4BWBOMJ3D3ZTQQSGE5F6JBQLV',
-//         tradeType: 'EXACT_IN' as TradeType,
-//         priceImpact: {
-//           numerator: '3',
-//           denominator: '1000000'
-//         },
-//         trade: {
-//           amountIn: '9950000',
-//           amountOutMin: '2009972',
-//           expectedAmountOut: '2020072',
-//           distribution: [{
-//             protocol_id: 'soroswap',
-//             path: ['token1', 'token2'],
-//             parts: 10,
-//             is_exact_in: true
-//           }]
-//         }
-//       };
+      const mockQuoteResponse: QuoteResponse = {
+        assetIn: 'CAS3J7GYLGXMF6TDJBBYYSE3HQ6BBSMLNUQ34T6TZMYMW2EVH34XOWMA',
+        assetOut: 'CDTKPWPLOURQA2SGTKTUQOWRCBZEORB4BWBOMJ3D3ZTQQSGE5F6JBQLV',
+        tradeType: TradeType.EXACT_IN,
+        platform: SupportedPlatforms.AGGREGATOR,
+        priceImpact: {
+          numerator: 3n,
+          denominator: 1000000n
+        },
+        trade: {
+          amountIn: 9950000n,
+          amountOutMin: 2009972n,
+          expectedAmountOut: 2020072n,
+          distribution: [{
+            protocol_id: SupportedProtocols.SOROSWAP,
+            path: ['CAS3J7GYLGXMF6TDJBBYYSE3HQ6BBSMLNUQ34T6TZMYMW2EVH34XOWMA', 'CDTKPWPLOURQA2SGTKTUQOWRCBZEORB4BWBOMJ3D3ZTQQSGE5F6JBQLV'],
+            parts: 10,
+            is_exact_in: true
+          }]
+        }
+      };
 
-//       // Mock the HTTP client
-//       (sdk as any).httpClient.post = jest.fn().mockResolvedValue(mockQuoteResponse);
+      // Mock the HTTP client
+      (sdk as any).httpClient.post = jest.fn().mockResolvedValue(mockQuoteResponse);
 
-//       const result = await sdk.quote(mockQuoteRequest, 'testnet');
+      const result = await sdk.quote(mockQuoteRequest, SupportedNetworks.MAINNET);
 
-//       expect(result).toEqual(mockQuoteResponse);
-//       expect((sdk as any).httpClient.post).toHaveBeenCalledWith(
-//         '/quote?network=testnet',
-//         mockQuoteRequest
-//       );
-//     });
-//   });
-// });
+      expect(result).toEqual(mockQuoteResponse);
+      expect((sdk as any).httpClient.post).toHaveBeenCalledWith(
+        '/quote?network=mainnet',
+        mockQuoteRequest
+      );
+    });
+  });
+});
