@@ -24,41 +24,6 @@ export interface BuildQuoteRequest {
 export interface BuildQuoteResponse {
   xdr: string;
 }
-
-export interface CommonBuildTradeReturnFields {
-  assetIn: string
-  assetOut: string
-  priceImpact: {
-    numerator: bigint
-    denominator: bigint
-  }
-  platform: SupportedPlatforms
-  feeBps?: number
-  feeAmount?: bigint
-}
-
-export interface ExactInBuildTradeReturn extends CommonBuildTradeReturnFields {
-  tradeType: TradeType.EXACT_IN
-  trade: {
-    amountIn: bigint
-    amountOutMin: bigint
-    expectedAmountOut?: bigint
-    path: string[]
-    poolHashes?: string[]
-  }
-}
-
-export interface ExactOutBuildTradeReturn extends CommonBuildTradeReturnFields {
-  tradeType: TradeType.EXACT_OUT
-  trade: {
-    amountOut: bigint
-    amountInMax: bigint
-    expectedAmountIn?: bigint
-    path: string[]
-    poolHashes?: string[]
-  }
-}
-
 export interface DistributionReturn {
   protocol_id: SupportedProtocols
   path: string[]
@@ -67,28 +32,87 @@ export interface DistributionReturn {
   poolHashes?: string[]
 }
 
-export interface ExactInSplitBuildTradeReturn extends CommonBuildTradeReturnFields {
+export interface BaseExactInTrade {
+  amountIn: bigint
+  amountOutMin: bigint
+}
+
+export interface ExactInTradeWithPath extends BaseExactInTrade {
+  path: string[]
+  distribution?: never
+}
+
+export interface ExactInTradeWithDistribution extends BaseExactInTrade {
+  path?: never
+  distribution: DistributionReturn[]
+}
+
+export type ExactInTrade = ExactInTradeWithPath | ExactInTradeWithDistribution
+
+export interface BaseExactOutTrade {
+  amountOut: bigint
+  amountInMax: bigint
+}
+
+export interface ExactOutTradeWithPath extends BaseExactOutTrade {
+  path: string[]
+  distribution?: never
+}
+
+export interface ExactOutTradeWithDistribution extends BaseExactOutTrade {
+  path?: never
+  distribution: DistributionReturn[]
+}
+
+export interface HorizonPath {
+  asset_type: string,
+  asset_code: string,
+  asset_issuer: string,
+}
+
+export interface HorizonBaseStrictPaths {
+  source_asset_type: string,
+  source_amount: string,
+  destination_asset_type: string,
+  destination_amount: string,
+  path: HorizonPath[]
+}
+
+export interface HorizonStrictSendPaths extends HorizonBaseStrictPaths {
+  source_asset_code: string,
+  source_asset_issuer: string,
+}
+export interface HorizonStrictReceivePaths extends HorizonBaseStrictPaths {
+  destination_asset_code: string,
+  destination_asset_issuer: string,
+}
+
+export type ExactOutTrade = ExactOutTradeWithPath | ExactOutTradeWithDistribution
+
+interface BaseQuoteResponse {
+  assetIn: string
+  assetOut: string
+  amountIn: bigint
+  amountOut: bigint
+  priceImpactPct: string
+  platform: SupportedPlatforms
+  routePlan: {
+    protocol: SupportedProtocols,
+    path: string[],
+    percentage: number
+  }[]
+  feeBps?: number
+  feeAmount?: bigint
+}
+
+export interface ExactInQuoteResponse extends BaseQuoteResponse {
   tradeType: TradeType.EXACT_IN
-  trade: {
-    amountIn: bigint
-    amountOutMin: bigint
-    expectedAmountOut?: bigint
-    distribution: DistributionReturn[]
-  }
+  rawTrade: ExactInTrade | HorizonStrictSendPaths
 }
 
-export interface ExactOutSplitBuildTradeReturn extends CommonBuildTradeReturnFields {
+export interface ExactOutQuoteResponse extends BaseQuoteResponse {
   tradeType: TradeType.EXACT_OUT
-  trade: {
-    amountOut: bigint
-    amountInMax: bigint
-    expectedAmountIn?: bigint
-    distribution: DistributionReturn[]
-  }
+  rawTrade: ExactOutTrade | HorizonStrictReceivePaths
 }
 
-export type BuildTradeReturn = ExactInBuildTradeReturn | ExactOutBuildTradeReturn
-
-export type BuildSplitTradeReturn = ExactInSplitBuildTradeReturn | ExactOutSplitBuildTradeReturn
-
-export type QuoteResponse = BuildTradeReturn | BuildSplitTradeReturn
+export type QuoteResponse = ExactInQuoteResponse | ExactOutQuoteResponse

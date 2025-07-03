@@ -1,6 +1,6 @@
 export interface AssetInfo {
-  code: string;
-  issuer: string;
+  code?: string;
+  issuer?: string;
   contract?: string;
   name?: string;
   org?: string;
