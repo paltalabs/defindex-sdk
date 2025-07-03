@@ -99,7 +99,7 @@ interface BaseQuoteResponse {
   routePlan: {
     protocol: SupportedProtocols,
     path: string[],
-    percentage: number
+    percentage: string
   }[]
   feeBps?: number
   feeAmount?: bigint
