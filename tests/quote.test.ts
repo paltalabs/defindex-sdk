@@ -1,5 +1,5 @@
 import { SoroswapSDK } from '../src';
-import { QuoteRequest, SupportedProtocols, TradeType } from '../src/types';
+import { QuoteRequest, QuoteResponse, SupportedNetworks, SupportedPlatforms, SupportedProtocols, TradeType } from '../src/types';
 
 describe('SoroswapSDK - Quote Functions', () => {
   let sdk: SoroswapSDK;
@@ -24,30 +24,40 @@ describe('SoroswapSDK - Quote Functions', () => {
         protocols: ['soroswap', 'aqua'] as SupportedProtocols[]
       };
 
-      // const mockQuoteResponse: QuoteResponse = {
-      //   assetIn: 'CAS3J7GYLGXMF6TDJBBYYSE3HQ6BBSMLNUQ34T6TZMYMW2EVH34XOWMA',
-      //   assetOut: 'CDTKPWPLOURQA2SGTKTUQOWRCBZEORB4BWBOMJ3D3ZTQQSGE5F6JBQLV',
-      //   tradeType: TradeType.EXACT_IN,
-      //   platform: SupportedPlatforms.AGGREGATOR,
-      //   priceImpactPct: "0.1",
-      //   rawTrade: {
-      //     amountIn: 9950000n,
-      //     amountOutMin: 2009972n,
-      //     distribution: [{
-      //       protocol_id: SupportedProtocols.SOROSWAP,
-      //       path: ['CAS3J7GYLGXMF6TDJBBYYSE3HQ6BBSMLNUQ34T6TZMYMW2EVH34XOWMA', 'CDTKPWPLOURQA2SGTKTUQOWRCBZEORB4BWBOMJ3D3ZTQQSGE5F6JBQLV'],
-      //       parts: 10,
-      //       is_exact_in: true
-      //     }]
-      //   }
-      // };
+      const mockQuoteResponse: QuoteResponse = {
+        assetIn: 'CAS3J7GYLGXMF6TDJBBYYSE3HQ6BBSMLNUQ34T6TZMYMW2EVH34XOWMA',
+        amountIn: 10000000n,
+        assetOut: 'CDTKPWPLOURQA2SGTKTUQOWRCBZEORB4BWBOMJ3D3ZTQQSGE5F6JBQLV',
+        amountOut: 2009972n,
+        otherAmountThreshold: 2009972n,
+        priceImpactPct: "0.1",
+        platform: SupportedPlatforms.AGGREGATOR,
+        routePlan: [{
+          swapInfo: {
+            protocol: SupportedProtocols.SOROSWAP,
+            path: ['CAS3J7GYLGXMF6TDJBBYYSE3HQ6BBSMLNUQ34T6TZMYMW2EVH34XOWMA', 'CDTKPWPLOURQA2SGTKTUQOWRCBZEORB4BWBOMJ3D3ZTQQSGE5F6JBQLV']
+          },
+          percent: "100"
+        }],
+        tradeType: TradeType.EXACT_IN,
+        rawTrade: {
+          amountIn: 10000000n,
+          amountOutMin: 2009972n,
+          distribution: [{
+            protocol_id: SupportedProtocols.SOROSWAP,
+            path: ['CAS3J7GYLGXMF6TDJBBYYSE3HQ6BBSMLNUQ34T6TZMYMW2EVH34XOWMA', 'CDTKPWPLOURQA2SGTKTUQOWRCBZEORB4BWBOMJ3D3ZTQQSGE5F6JBQLV'],
+            parts: 10,
+            is_exact_in: true
+          }]
+        }
+      };
 
-      // // Mock the HTTP client
-      // (sdk as any).httpClient.post = jest.fn().mockResolvedValue(mockQuoteResponse);
+      // Mock the HTTP client
+      (sdk as any).httpClient.post = jest.fn().mockResolvedValue(mockQuoteResponse);
 
-      // const result = await sdk.quote(mockQuoteRequest, SupportedNetworks.MAINNET);
+      const result = await sdk.quote(mockQuoteRequest, SupportedNetworks.MAINNET);
 
-      // expect(result).toEqual(mockQuoteResponse);
+      expect(result).toEqual(mockQuoteResponse);
       expect((sdk as any).httpClient.post).toHaveBeenCalledWith(
         '/quote?network=mainnet',
         mockQuoteRequest
