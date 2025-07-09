@@ -88,34 +88,9 @@ export interface HorizonBaseStrictPaths {
 }
 
 export interface HorizonTrustlineStrictPaths extends HorizonBaseStrictPaths {
-  trustlineStuff?: {
-    totalOut?: string
-    expectedOut?: string 
-    minimumOut?: string
-    swapPath?: HorizonBaseStrictPaths
-    repayIn?: string // The amount of the sourceAsset to repay the trustline
-    maxRepayIn?: string // The maximum amount of the sourceAsset to repay the trustline
-    repayPath?: HorizonBaseStrictPaths // The repay path
-    trustlineCostAssetIn?: string
-    trustlineCostAssetOut?: string
-  
-    // EXACT OUT
-    // Quote
-    finalExpectedIn?: string // The final expected amount to spend in the gasless exact out
-    finalMaximumIn?: string // The final maximum amount to spend in the gasless exact out
-    
-    // The sourceAsset to destinationAsset swap
-    expectedSwapIn?: string // The expected amount to spend in the first swap
-    maximumSwapIn?: string // The maximum amount to spend in the first swap
-  
-    // Trustline Swap?: Swap destinationAsset to 0.5 XLM
-    expectedTrustlineCostIn?: string // The expected amount to spend in the gasless exact out
-    maximumTrustlineCostIn?: string // The maximum amount to spend in the gasless exact out
-    trustlineCostPath?: HorizonBaseStrictPaths // The path to swap the destinationAsset to 0.5 XLM
-  
-    // Extra info?: 
-    trustlineEquivalentAssetOut?: string // The amount of destinationAsset to repay the trustline
-  }
+  trustlineOperation: HorizonBaseStrictPaths
+  netAmount: string
+  otherNetAmountThreshold: string
 }
 
 export type HorizonStrictPaths = HorizonBaseStrictPaths | HorizonTrustlineStrictPaths
