@@ -53,7 +53,11 @@ async function main() {
     console.log('Quote received:');
     console.log('- Asset In:', quote.assetIn);
     console.log('- Asset Out:', quote.assetOut);
+    console.log('- Amount In:', quote.amountIn);
+    console.log('- Amount Out:', quote.amountOut);
     console.log('- Trade Type:', quote.tradeType);
+    console.log('- Price Impact:', quote.priceImpactPct + '%');
+    console.log('- Route Plans:', quote.routePlan.length);
 
     // 4. Build the transaction from the quote
     console.log('\n4. Building transaction...');

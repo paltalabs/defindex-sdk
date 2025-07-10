@@ -44,23 +44,21 @@ describe('SoroswapSDK - Quote Functions', () => {
 
       const mockQuoteResponse: QuoteResponse = {
         assetIn: 'CAS3J7GYLGXMF6TDJBBYYSE3HQ6BBSMLNUQ34T6TZMYMW2EVH34XOWMA',
-        amountIn: 10000000n,
+        amountIn: "10000000",
         assetOut: 'CDTKPWPLOURQA2SGTKTUQOWRCBZEORB4BWBOMJ3D3ZTQQSGE5F6JBQLV',
-        amountOut: 2009972n,
-        otherAmountThreshold: 2009972n,
-        priceImpactPct: "0.1",
+        amountOut: 8559560,
+        otherAmountThreshold: 8559560,
+        priceImpactPct: "0.00",
         platform: SupportedPlatforms.AGGREGATOR,
         routePlan: [{
-          swapInfo: {
-            protocol: SupportedProtocols.SOROSWAP,
-            path: ['CAS3J7GYLGXMF6TDJBBYYSE3HQ6BBSMLNUQ34T6TZMYMW2EVH34XOWMA', 'CDTKPWPLOURQA2SGTKTUQOWRCBZEORB4BWBOMJ3D3ZTQQSGE5F6JBQLV']
-          },
-          percent: "100"
+          protocol: SupportedProtocols.SOROSWAP,
+          path: ['CAS3J7GYLGXMF6TDJBBYYSE3HQ6BBSMLNUQ34T6TZMYMW2EVH34XOWMA', 'CDTKPWPLOURQA2SGTKTUQOWRCBZEORB4BWBOMJ3D3ZTQQSGE5F6JBQLV'],
+          percentage: "100.00"
         }],
         tradeType: TradeType.EXACT_IN,
         rawTrade: {
-          amountIn: 10000000n,
-          amountOutMin: 2009972n,
+          amountIn: "10000000",
+          amountOutMin: 8559560,
           distribution: [{
             protocol_id: SupportedProtocols.SOROSWAP,
             path: ['CAS3J7GYLGXMF6TDJBBYYSE3HQ6BBSMLNUQ34T6TZMYMW2EVH34XOWMA', 'CDTKPWPLOURQA2SGTKTUQOWRCBZEORB4BWBOMJ3D3ZTQQSGE5F6JBQLV'],
@@ -68,7 +66,7 @@ describe('SoroswapSDK - Quote Functions', () => {
             is_exact_in: true
           }]
         }
-      };
+      } as any;
 
       // Mock the HTTP client
       (sdk as any).httpClient.post = jest.fn().mockResolvedValue(mockQuoteResponse);

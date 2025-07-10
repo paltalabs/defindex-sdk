@@ -32,6 +32,7 @@ describe("SoroswapSDK - Integration Tests", () => {
 
     sdk = new SoroswapSDK({
       apiKey: process.env.SOROSWAP_API_KEY!,
+      baseUrl: process.env.SOROSWAP_API_URL,
       defaultNetwork: SupportedNetworks.MAINNET,
       timeout: 30000,
     });
@@ -103,14 +104,14 @@ describe("SoroswapSDK - Integration Tests", () => {
         expect(quote.assetOut).toBe(EURC);
         expect(quote.tradeType).toBe("EXACT_IN");
         expect(quote.rawTrade).toBeDefined();
-        expect((quote as ExactInBuildTradeReturn).trade.expectedAmountOut).toBeDefined();
+        expect(quote.amountOut).toBeDefined();
         expect(quote.priceImpactPct).toBeDefined();
-        expect(Array.isArray((quote as ExactInSplitBuildTradeReturn).trade.distribution)).toBe(true);
+        expect(Array.isArray(quote.routePlan)).toBe(true);
 
         console.log("✅ Quote received:", {
-          expectedOutput: (quote as ExactInBuildTradeReturn).trade.expectedAmountOut?.toString(),
+          amountOut: quote.amountOut.toString(),
           priceImpact: `${quote.priceImpactPct}%`,
-          protocols: (quote as ExactInSplitBuildTradeReturn).trade.distribution.map((d) => d.protocol_id),
+          protocols: quote.routePlan.map((r: any) => r.protocol),
         });
       } catch (error: any) {
         if (
