@@ -11,7 +11,7 @@ dotenv.config();
 jest.setTimeout(30000);
 
 // Check for required environment variables
-const requiredEnvVars = ['SOROSWAP_EMAIL', 'SOROSWAP_PASSWORD'];
+const requiredEnvVars = ['SOROSWAP_API_KEY'];
 const missingVars = requiredEnvVars.filter(varName => !process.env[varName]);
 
 if (missingVars.length > 0) {
@@ -38,8 +38,7 @@ console.log = (...args: any[]) => {
 beforeAll(async () => {
   if (missingVars.length === 0) {
     console.log('🚀 Starting integration tests against Soroswap API...');
-    console.log(`📧 Using email: ${process.env.SOROSWAP_EMAIL}`);
-    console.log('🔒 Password: [HIDDEN]');
+    console.log(`🔑 Using API key: ${process.env.SOROSWAP_API_KEY?.substring(0, 10)}...`);
   }
 });
 

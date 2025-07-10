@@ -2,30 +2,29 @@
 import axios, { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios';
 
 /**
- * HTTP client wrapper with automatic authentication and error handling
+ * HTTP client wrapper with API key authentication and error handling
  */
 export class HttpClient {
   private client: AxiosInstance;
-  private tokenProvider: () => Promise<string | null>;
 
   constructor(
     baseURL: string,
-    timeout: number = 30000,
-    tokenProvider: () => Promise<string | null>
+    apiKey: string,
+    timeout: number = 30000
   ) {
-    this.tokenProvider = tokenProvider;
     
     this.client = axios.create({
       baseURL,
       timeout,
       headers: {
         'Content-Type': 'application/json',
+        'Authorization': `Bearer ${apiKey}`,
       },
       // Add custom transformRequest to handle BigInt serialization
       transformRequest: [
         (data: any) => {
           if (data && typeof data === 'object') {
-            return JSON.stringify(data, (key, value) =>
+            return JSON.stringify(data, (_, value) =>
               typeof value === 'bigint' ? value.toString() : value
             );
           }
@@ -33,26 +32,6 @@ export class HttpClient {
         }
       ],
     });
-
-    // Add request interceptor to inject auth token
-    this.client.interceptors.request.use(
-      async (config: any) => {
-        // Skip auth for authentication endpoints to prevent infinite loops
-        const authEndpoints = ['/login', '/refresh', '/health'];
-        const isAuthEndpoint = authEndpoints.some(endpoint => 
-          config.url?.includes(endpoint)
-        );
-        
-        if (!isAuthEndpoint) {
-          const token = await this.tokenProvider();
-          config.headers.Authorization = `Bearer ${token}`;
-        }
-        return config;
-      },
-      (error: any) => {
-        return Promise.reject(this.transformError(error));
-      }
-    );
 
     // Add response interceptor for error handling
     this.client.interceptors.response.use(

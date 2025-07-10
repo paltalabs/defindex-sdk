@@ -9,8 +9,26 @@ describe('SoroswapSDK - Quote Functions', () => {
     
     // Create SDK instance
     sdk = new SoroswapSDK({
-      email: 'test@example.com',
-      password: 'password123'
+      apiKey: 'sk_test_api_key_123'
+    });
+  });
+
+  describe('constructor', () => {
+    it('should use default baseUrl when not provided', () => {
+      const defaultSdk = new SoroswapSDK({
+        apiKey: 'sk_test_key'
+      });
+      
+      expect(defaultSdk).toBeDefined();
+    });
+
+    it('should use custom baseUrl when provided', () => {
+      const customSdk = new SoroswapSDK({
+        apiKey: 'sk_test_key',
+        baseUrl: 'http://localhost:3000'
+      });
+      
+      expect(customSdk).toBeDefined();
     });
   });
 

@@ -1,4 +1,3 @@
-import { AuthManager } from './auth/auth-manager';
 import { HttpClient } from './clients/http-client';
 import {
   AddLiquidityRequest,
@@ -21,40 +20,24 @@ import { SendRequest } from './types/send';
 
 /**
  * Main Soroswap SDK class
- * Provides access to all Soroswap API functionality with automatic authentication
+ * Provides access to all Soroswap API functionality with API key authentication
  */
 export class SoroswapSDK {
-  private authManager: AuthManager;
   private httpClient: HttpClient;
   private defaultNetwork: SupportedNetworks;
 
   constructor(config: SoroswapSDKConfig) {
     this.defaultNetwork = config.defaultNetwork || SupportedNetworks.MAINNET;
     
-    // Initialize auth manager
-    this.authManager = new AuthManager({
-      email: config.email,
-      password: config.password
-    });
-
-    // Initialize HTTP client
-    const baseURL = 'https://api.soroswap.finance';
+    // Initialize HTTP client with API key
+    const baseURL = config.baseUrl || 'https://api.soroswap.finance';
     const timeout = config.timeout || 30000;
     
     this.httpClient = new HttpClient(
       baseURL,
-      timeout,
-      this.authManager.getTokenProvider()
+      config.apiKey,
+      timeout
     );
-
-    // Inject HTTP client into auth manager
-    this.authManager.setHttpClient(this.httpClient);
-  }
-  /**
-   * Check if user is authenticated
-   */
-  isAuthenticated(): boolean {
-    return this.authManager.isAuthenticated();
   }
 
   /**

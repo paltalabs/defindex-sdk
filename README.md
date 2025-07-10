@@ -4,13 +4,13 @@ Official TypeScript SDK for [Soroswap.Finance](https://soroswap.finance) - The f
 
 ## 🌟 Features
 
-- **🔐 Automatic Authentication**: Handles login, token refresh, and session management
+- **🔐 Simple API Key Authentication**: Secure API key-based authentication
 - **💱 Trading Operations**: Get quotes, build transactions, send them to the network
 - **💧 Liquidity Management**: Add/remove liquidity and track positions
 - **📊 Market Data**: Access pools, prices, and asset information
-- **🔒 Server-Side Focused**: Secure handling of credentials and sensitive operations
+- **🔒 Server-Side Focused**: Secure handling of API keys and sensitive operations
 - **📝 TypeScript Support**: Full type safety with comprehensive interfaces
-- **⚡ Access Token Caching**: In-memory access token management with automatic refresh
+- **⚡ Lightweight**: No complex authentication flows or token management
 - **🧪 Well Tested**: Comprehensive unit test coverage
 
 ## 🚀 Installation
@@ -26,8 +26,7 @@ import { SoroswapSDK, SupportedNetworks, SupportedProtocols, TradeType } from '@
 
 // Initialize the SDK
 const soroswapClient = new SoroswapSDK({
-  email: 'your-email@example.com',
-  password: 'your-password'
+  apiKey: 'sk_your_api_key_here'
 });
 
 // Get a quote for a swap
@@ -60,8 +59,8 @@ console.log('Transaction result:', result);
 
 ```typescript
 interface SoroswapSDKConfig {
-  email: string;                    // Your Soroswap account email
-  password: string;                 // Your Soroswap account password
+  apiKey: string;                   // Your Soroswap API key (starts with 'sk_')
+  baseUrl?: string;                 // Custom API base URL (defaults to 'https://api.soroswap.finance')
   defaultNetwork?: SupportedNetworks;  // SupportedNetworks.MAINNET | SupportedNetworks.TESTNET
   timeout?: number;                // Request timeout in ms (defaults to 30000) you might want to adjust this if using launchtube
 }
@@ -73,11 +72,18 @@ For better security, you can use environment variables:
 
 ```typescript
 const soroswapClient = new SoroswapSDK({
-  email: process.env.SOROSWAP_EMAIL!,
-  password: process.env.SOROSWAP_PASSWORD!,
+  apiKey: process.env.SOROSWAP_API_KEY!,
+  baseUrl: process.env.SOROSWAP_API_URL, // Optional: for localhost or custom API
   defaultNetwork: process.env.NODE_ENV === 'production' 
     ? SupportedNetworks.MAINNET 
     : SupportedNetworks.TESTNET
+});
+
+// Example for local development:
+const localClient = new SoroswapSDK({
+  apiKey: 'sk_local_api_key',
+  baseUrl: 'http://localhost:3000',
+  defaultNetwork: SupportedNetworks.TESTNET
 });
 ```
 
@@ -85,11 +91,13 @@ const soroswapClient = new SoroswapSDK({
 
 ### Authentication
 
-The SDK handles authentication automatically:
+The SDK uses API key authentication - no complex authentication flows needed:
 
 ```typescript
-// Check authentication status
-const isAuth = soroswapClient.isAuthenticated();
+// Simply initialize with your API key
+const soroswapClient = new SoroswapSDK({
+  apiKey: 'sk_your_api_key_here'
+});
 ```
 
 ### Trading Operations
@@ -265,9 +273,9 @@ const aggregatorAddress = await soroswapClient.getContractAddress(SupportedNetwo
 
 ## 🔐 Security Best Practices
 
-1. **Environment Variables**: Store credentials in environment variables, not in code
+1. **Environment Variables**: Store API keys in environment variables, not in code
 2. **Server-Side Only**: This SDK is designed for server-side use only
-3. **Token Management**: The SDK handles token refresh automatically
+3. **API Key Security**: Keep your API keys secure and never commit them to version control
 4. **Error Handling**: Always wrap API calls in try-catch blocks
 
 ```typescript
@@ -311,9 +319,8 @@ pnpm run test:watch
 Tests that actually call the Soroswap API:
 
 ```bash
-# Set up credentials first
-export SOROSWAP_EMAIL="your-email@example.com"
-export SOROSWAP_PASSWORD="your-password"
+# Set up API key first
+export SOROSWAP_API_KEY="sk_your_api_key_here"
 
 # Run integration tests
 pnpm run test:integration
@@ -322,7 +329,7 @@ pnpm run test:integration
 pnpm run test:all
 ```
 
-**Note**: Integration tests require valid Soroswap credentials and may fail due to network issues or API changes. See [Integration Test Documentation](./tests/integration/README.md) for detailed setup.
+**Note**: Integration tests require a valid Soroswap API key and may fail due to network issues or API changes. See [Integration Test Documentation](./tests/integration/README.md) for detailed setup.
 
 ### Linting
 
@@ -341,6 +348,10 @@ While this SDK is server-side focused, you can create secure frontend integratio
 // Backend API endpoint
 app.post('/api/quote', async (req, res) => {
   try {
+    const soroswapClient = new SoroswapSDK({
+      apiKey: process.env.SOROSWAP_API_KEY!
+    });
+    
     const quote = await soroswapClient.quote(req.body);
     const buildResponse = await soroswapClient.build({
       quote,
@@ -351,8 +362,6 @@ app.post('/api/quote', async (req, res) => {
     res.json({
       xdr: buildResponse.xdr,
       quote: {
-        trade: quote.trade,
-        priceImpact: quote.priceImpact,
         assetIn: quote.assetIn,
         assetOut: quote.assetOut,
         tradeType: quote.tradeType

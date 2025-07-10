@@ -32,8 +32,8 @@ export enum SupportedProtocols {
 }
 
 export interface SoroswapSDKConfig {
-  email: string;
-  password: string;
+  apiKey: string;
+  baseUrl?: string;
   defaultNetwork?: SupportedNetworks;
   timeout?: number;
 }

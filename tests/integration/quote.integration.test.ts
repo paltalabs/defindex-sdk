@@ -1,55 +1,50 @@
 import { SoroswapSDK } from "../../src";
-import { ExactInBuildTradeReturn, ExactInSplitBuildTradeReturn, QuoteRequest, SupportedNetworks, SupportedProtocols, TradeType } from "../../src/types";
+import { QuoteRequest, SupportedNetworks, SupportedProtocols, TradeType } from "../../src/types";
 
 /**
  * Integration tests for the Soroswap SDK
- * These tests actually call the real API and require valid credentials
+ * These tests actually call the real API and require valid API key
  *
  * To run these tests:
- * 1. Set environment variables: SOROSWAP_EMAIL and SOROSWAP_PASSWORD
+ * 1. Set environment variable: SOROSWAP_API_KEY
  * 2. Run: pnpm run test:integration
  *
  * Note: These tests may fail if:
  * - API is down
  * - Network issues
- * - Invalid credentials
+ * - Invalid API key
  * - Rate limiting
  */
 
 describe("SoroswapSDK - Integration Tests", () => {
   let sdk: SoroswapSDK;
 
-  // Skip integration tests if credentials are not provided
-  const skipTests =
-    !process.env.SOROSWAP_EMAIL || !process.env.SOROSWAP_PASSWORD;
+  // Skip integration tests if API key is not provided
+  const skipTests = !process.env.SOROSWAP_API_KEY;
 
   beforeAll(() => {
     if (skipTests) {
       console.log(
-        "⚠️  Skipping integration tests - missing SOROSWAP_EMAIL or SOROSWAP_PASSWORD"
+        "⚠️  Skipping integration tests - missing SOROSWAP_API_KEY"
       );
       return;
     }
 
     sdk = new SoroswapSDK({
-      email: process.env.SOROSWAP_EMAIL!,
-      password: process.env.SOROSWAP_PASSWORD!,
-      defaultNetwork: SupportedNetworks.MAINNET, // Use testnet for integration tests
+      apiKey: process.env.SOROSWAP_API_KEY!,
+      defaultNetwork: SupportedNetworks.MAINNET,
       timeout: 30000,
     });
   });
 
-  describe("Authentication Flow", () => {
-    it("should authenticate", async () => {
+  describe("API Connection", () => {
+    it("should connect to API with valid key", async () => {
       if (skipTests) return;
 
-      // The SDK should automatically authenticate when making first request
+      // The SDK should work with API key authentication
       const protocols = await sdk.getProtocols(SupportedNetworks.MAINNET);
 
       expect(Array.isArray(protocols)).toBe(true);
-
-      // Should be authenticated now
-      expect(sdk.isAuthenticated()).toBe(true);
     }, 15000);
   });
 
@@ -107,18 +102,14 @@ describe("SoroswapSDK - Integration Tests", () => {
         expect(quote.assetIn).toBe(USDC);
         expect(quote.assetOut).toBe(EURC);
         expect(quote.tradeType).toBe("EXACT_IN");
-        expect(quote.trade).toBeDefined();
+        expect(quote.rawTrade).toBeDefined();
         expect((quote as ExactInBuildTradeReturn).trade.expectedAmountOut).toBeDefined();
-        expect(quote.priceImpact).toBeDefined();
+        expect(quote.priceImpactPct).toBeDefined();
         expect(Array.isArray((quote as ExactInSplitBuildTradeReturn).trade.distribution)).toBe(true);
 
         console.log("✅ Quote received:", {
           expectedOutput: (quote as ExactInBuildTradeReturn).trade.expectedAmountOut?.toString(),
-          priceImpact: `${(
-            (parseFloat(quote.priceImpact.numerator.toString()) /
-              parseFloat(quote.priceImpact.denominator.toString())) *
-            100
-          ).toFixed(4)}%`,
+          priceImpact: `${quote.priceImpactPct}%`,
           protocols: (quote as ExactInSplitBuildTradeReturn).trade.distribution.map((d) => d.protocol_id),
         });
       } catch (error: any) {
