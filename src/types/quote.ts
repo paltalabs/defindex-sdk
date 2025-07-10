@@ -10,7 +10,7 @@ export interface QuoteRequest {
   parts?: number;
   slippageBps?: number;
   maxHops?: number;
-  assetList?: SupportedAssetLists[];
+  assetList?: (SupportedAssetLists | string)[];
   feeBps?: number;
   gaslessTrustline?: boolean;
 }

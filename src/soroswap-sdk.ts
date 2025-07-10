@@ -41,6 +41,46 @@ export class SoroswapSDK {
   }
 
   /**
+   * Transform asset list from enum URLs to simple strings for API
+   */
+  private transformAssetList(assetList: (SupportedAssetLists | string)[]): string[] {
+    return assetList.map(asset => {
+      if (typeof asset === 'string') {
+        // If it's already a string, check if it's an enum URL
+        if (Object.values(SupportedAssetLists).includes(asset as SupportedAssetLists)) {
+          // Extract the identifier from the URL
+          switch (asset) {
+            case SupportedAssetLists.SOROSWAP:
+              return 'soroswap';
+            case SupportedAssetLists.STELLAR_EXPERT:
+              return 'stellar_expert';
+            case SupportedAssetLists.LOBSTR:
+              return 'lobstr';
+            case SupportedAssetLists.AQUA:
+              return 'aqua';
+            default:
+              return asset;
+          }
+        }
+        return asset;
+      }
+      // If it's an enum, transform to simple string
+      switch (asset) {
+        case SupportedAssetLists.SOROSWAP:
+          return 'soroswap';
+        case SupportedAssetLists.STELLAR_EXPERT:
+          return 'stellar_expert';
+        case SupportedAssetLists.LOBSTR:
+          return 'lobstr';
+        case SupportedAssetLists.AQUA:
+          return 'aqua';
+        default:
+          return asset as string;
+      }
+    });
+  }
+
+  /**
    * Get contract address for a specific network and contract name
    */
   async getContractAddress(
@@ -69,7 +109,14 @@ export class SoroswapSDK {
   async quote(quoteRequest: QuoteRequest, network?: SupportedNetworks): Promise<QuoteResponse> {
     const params = { network: network || this.defaultNetwork };
     const url = this.httpClient.buildUrlWithQuery('/quote', params);
-    return this.httpClient.post<QuoteResponse>(url, quoteRequest);
+    
+    // Transform the request to convert enum URLs to simple strings
+    const transformedRequest = { ...quoteRequest };
+    if (transformedRequest.assetList) {
+      transformedRequest.assetList = this.transformAssetList(transformedRequest.assetList);
+    }
+    
+    return this.httpClient.post<QuoteResponse>(url, transformedRequest);
   }
 
   /**
@@ -102,7 +149,7 @@ export class SoroswapSDK {
   async getPools(
     network: SupportedNetworks,
     protocols: string[],
-    assetList?: SupportedAssetLists[]
+    assetList?: (SupportedAssetLists | string)[]
   ): Promise<Pool[]> {
     const params: any = {
       network,
@@ -110,7 +157,7 @@ export class SoroswapSDK {
     };
 
     if (assetList) {
-      params.assetList = assetList;
+      params.assetList = this.transformAssetList(assetList);
     }
 
     const url = this.httpClient.buildUrlWithQuery('/pools', params);

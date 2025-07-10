@@ -364,7 +364,22 @@ describe('SoroswapSDK - Comprehensive Unit Tests', () => {
 
       expect(result).toEqual(mockPools);
       expect(mockHttpClient.get).toHaveBeenCalledWith(
-        '/pools?network=mainnet&protocol=soroswap&protocol=aqua&assetList=https%3A%2F%2Fraw.githubusercontent.com%2Fsoroswap%2Ftoken-list%2Fmain%2FtokenList.json'
+        '/pools?network=mainnet&protocol=soroswap&protocol=aqua&assetList=soroswap'
+      );
+    });
+
+    it('should get pools with string array asset list', async () => {
+      mockHttpClient.get = jest.fn().mockResolvedValue(mockPools);
+
+      const result = await sdk.getPools(
+        SupportedNetworks.MAINNET,
+        [SupportedProtocols.SOROSWAP],
+        ['soroswap', 'custom_list']
+      );
+
+      expect(result).toEqual(mockPools);
+      expect(mockHttpClient.get).toHaveBeenCalledWith(
+        '/pools?network=mainnet&protocol=soroswap&assetList=soroswap&assetList=custom_list'
       );
     });
 
@@ -699,7 +714,7 @@ describe('SoroswapSDK - Comprehensive Unit Tests', () => {
       );
 
       expect(mockHttpClient.get).toHaveBeenCalledWith(
-        '/pools?network=mainnet&protocol=soroswap&assetList=https%3A%2F%2Fraw.githubusercontent.com%2Fsoroswap%2Ftoken-list%2Fmain%2FtokenList.json'
+        '/pools?network=mainnet&protocol=soroswap&assetList=soroswap'
       );
     });
 
