@@ -321,4 +321,46 @@ describe("SoroswapSDK - Integration Tests", () => {
   //     console.log('✅ Concurrent requests handled successfully');
   //   }, 15000);
   // });
+
+  describe('Liquidity', () => {
+    it('should get the pool information and get add liquidity xdr', async () => {
+      if (skipTests) return;
+
+      const pools = await sdk.getPoolByTokens(
+        "CCW67TSZV3SSS2HXMBQ5JFGCKJNXKZM7UQUWUZPUTHXSTZLEO7SJMI75",
+        "CDTKPWPLOURQA2SGTKTUQOWRCBZEORB4BWBOMJ3D3ZTQQSGE5F6JBQLV",
+        SupportedNetworks.MAINNET,
+        [SupportedProtocols.SOROSWAP]
+      );
+      console.log("🚀 | it | pool:", pools);
+
+      if (pools.length > 0) {
+        const pool = pools[0];
+        const ratio = Number(pool.reserveB) / Number(pool.reserveA);
+        
+        // Calculate proportional amounts
+        const amountA = '1000000';
+        const amountB = Math.floor(Number(amountA) * ratio).toString();
+        
+        const addLiquidityTx = await sdk.addLiquidity({
+          assetA: 'CCW67TSZV3SSS2HXMBQ5JFGCKJNXKZM7UQUWUZPUTHXSTZLEO7SJMI75',
+          assetB: 'CDTKPWPLOURQA2SGTKTUQOWRCBZEORB4BWBOMJ3D3ZTQQSGE5F6JBQLV',
+          amountA: BigInt(amountA),
+          amountB: BigInt(amountB),
+          to: 'GB6LEFQDRNJE55Y5X7PDGHSXGK3CA23LWBKVMLBC7C4HISL74YH4QA4N', // Replace with actual wallet address
+          slippageTolerance: '50' // 0.5%
+        });
+
+        console.log("🚀 | addLiquidityTx:", addLiquidityTx);
+        
+        expect(addLiquidityTx).toBeDefined();
+        expect(addLiquidityTx.xdr).toBeDefined();
+        expect(typeof addLiquidityTx.xdr).toBe('string');
+        
+        console.log('✅ Add liquidity transaction created successfully');
+      } else {
+        console.log('⚠️  No pool found for this token pair');
+      }
+    }, 15000);
+  });
 });
