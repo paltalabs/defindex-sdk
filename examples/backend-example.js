@@ -46,7 +46,7 @@ async function main() {
       amount: 1000000000n, // 100 USDC (7 decimals)
       tradeType: TradeType.EXACT_IN,
       protocols: [SupportedProtocols.SOROSWAP, SupportedProtocols.AQUA],
-      slippageTolerance: '50', // 0.5%
+      slippageBps: '50', // 0.5%
     };
 
     const quote = await sdk.quote(quoteRequest);

@@ -39,7 +39,7 @@ export interface AddLiquidityRequest {
   amountA: bigint
   amountB: bigint
   to: string
-  slippageTolerance?: string
+  slippageBps?: string
 }
 
 export interface LiquidityResponse {
@@ -57,7 +57,7 @@ export interface RemoveLiquidityRequest {
   amountA: bigint
   amountB: bigint
   to: string
-  slippageTolerance?: string
+  slippageBps?: string
 }
 
 export interface UserPosition {

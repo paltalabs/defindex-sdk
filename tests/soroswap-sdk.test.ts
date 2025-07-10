@@ -1,23 +1,23 @@
 import { SoroswapSDK } from '../src';
 import {
-  QuoteRequest,
-  QuoteResponse,
+  AddLiquidityRequest,
+  AssetList,
+  AssetListInfo,
   BuildQuoteRequest,
   BuildQuoteResponse,
-  AddLiquidityRequest,
-  RemoveLiquidityRequest,
   LiquidityAction,
+  LiquidityResponse,
+  Pool,
+  PriceData,
+  QuoteRequest,
+  QuoteResponse,
+  RemoveLiquidityRequest,
+  SupportedAssetLists,
   SupportedNetworks,
   SupportedPlatforms,
   SupportedProtocols,
-  SupportedAssetLists,
   TradeType,
-  Pool,
-  UserPosition,
-  AssetList,
-  AssetListInfo,
-  PriceData,
-  LiquidityResponse
+  UserPosition
 } from '../src/types';
 import { SendRequest } from '../src/types/send';
 
@@ -150,7 +150,7 @@ describe('SoroswapSDK - Comprehensive Unit Tests', () => {
       amount: 1000000n,
       tradeType: TradeType.EXACT_IN,
       protocols: [SupportedProtocols.SOROSWAP, SupportedProtocols.AQUA],
-      slippageTolerance: 50,
+      slippageBps: 50,
       maxHops: 3
     };
 
@@ -453,7 +453,7 @@ describe('SoroswapSDK - Comprehensive Unit Tests', () => {
       amountA: 1000000n,
       amountB: 2000000n,
       to: 'WALLET_ADDRESS_123',
-      slippageTolerance: '50'
+      slippageBps: '50'
     };
 
     const mockLiquidityResponse: LiquidityResponse = {
@@ -498,7 +498,7 @@ describe('SoroswapSDK - Comprehensive Unit Tests', () => {
         amountA: 450000n,
         amountB: 900000n,
         to: 'WALLET_ADDRESS_123',
-        slippageTolerance: '50'
+        slippageBps: '50'
       };
 
       mockHttpClient.post = jest.fn().mockResolvedValue(mockLiquidityResponse);

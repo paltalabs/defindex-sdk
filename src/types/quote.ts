@@ -8,7 +8,7 @@ export interface QuoteRequest {
   tradeType: TradeType;
   protocols: SupportedProtocols[];
   parts?: number;
-  slippageTolerance?: number;
+  slippageBps?: number;
   maxHops?: number;
   assetList?: SupportedAssetLists[];
   feeBps?: number;

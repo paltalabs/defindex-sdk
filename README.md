@@ -118,7 +118,7 @@ const quote = await soroswapClient.quote({
   amount: 1000000n, // BigInt required
   tradeType: TradeType.EXACT_IN,
   protocols: [SupportedProtocols.SOROSWAP, SupportedProtocols.AQUA],
-  slippageTolerance: '50', // 0.5% in basis points
+  slippageBps: '50', // 0.5% in basis points
   maxHops: 2,
   feeBps: 30, // Optional fee in basis points
 });
@@ -199,7 +199,7 @@ if (pools.length > 0) {
     amountA: amountA,
     amountB: amountB,
     to: 'YOUR_WALLET_ADDRESS',
-    slippageTolerance: '50' // 0.5%
+    slippageBps: '50' // 0.5%
   });
 
   // Sign and send the transaction
@@ -220,7 +220,7 @@ const removeLiquidityTx = await soroswapClient.removeLiquidity({
   amountA: '450000',
   amountB: '900000',
   to: 'YOUR_WALLET_ADDRESS',
-  slippageTolerance: '50'
+  slippageBps: '50'
 });
 ```
 

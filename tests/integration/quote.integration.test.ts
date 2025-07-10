@@ -1,5 +1,5 @@
 import { SoroswapSDK } from "../../src";
-import { QuoteRequest, SupportedNetworks, SupportedProtocols, TradeType } from "../../src/types";
+import { QuoteRequest, SupportedAssetLists, SupportedNetworks, SupportedProtocols, TradeType } from "../../src/types";
 
 /**
  * Integration tests for the Soroswap SDK
@@ -84,7 +84,8 @@ describe("SoroswapSDK - Integration Tests", () => {
         assetOut: EURC,
         amount: 1000000000n, // 1 token (7 decimals)
         tradeType: TradeType.EXACT_IN,
-        protocols: [SupportedProtocols.SOROSWAP, SupportedProtocols.AQUA, SupportedProtocols.PHOENIX]
+        protocols: [SupportedProtocols.SOROSWAP, SupportedProtocols.AQUA, SupportedProtocols.PHOENIX],
+        assetList: [SupportedAssetLists.SOROSWAP]
       };
 
       try {
@@ -348,7 +349,7 @@ describe("SoroswapSDK - Integration Tests", () => {
           amountA: BigInt(amountA),
           amountB: BigInt(amountB),
           to: 'GB6LEFQDRNJE55Y5X7PDGHSXGK3CA23LWBKVMLBC7C4HISL74YH4QA4N', // Replace with actual wallet address
-          slippageTolerance: '50' // 0.5%
+          slippageBps: '50' // 0.5%
         });
 
         console.log("🚀 | addLiquidityTx:", addLiquidityTx);
