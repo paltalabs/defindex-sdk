@@ -1,0 +1,409 @@
+# Soroswap SDK - Complete Documentation
+
+## Overview
+The Soroswap SDK is the official TypeScript SDK for Soroswap.Finance, a comprehensive DEX (Decentralized Exchange) and exchange aggregator built on the Stellar network using Soroban smart contracts. This SDK provides server-side access to all Soroswap functionality including trading operations, liquidity management, market data retrieval, and system information.
+
+## Architecture
+
+### Core Components
+
+#### 1. SoroswapSDK (Main SDK Class)
+- **Location**: `src/soroswap-sdk.ts`
+- **Purpose**: Main orchestrator class that provides access to all Soroswap API functionality
+- **Key Features**:
+  - API key-based authentication
+  - Centralized HTTP client management
+  - Network-aware operations (MAINNET/TESTNET)
+  - Type-safe method signatures
+  - Asset list transformation utilities
+
+#### 2. HttpClient
+- **Location**: `src/clients/http-client.ts`
+- **Purpose**: Centralized HTTP communication with error handling and authentication
+- **Key Features**:
+  - Automatic Bearer token authentication
+  - BigInt serialization support
+  - Comprehensive error transformation
+  - Request/response interceptors
+  - URL query parameter building
+
+#### 3. Type System
+- **Location**: `src/types/`
+- **Purpose**: Comprehensive TypeScript type definitions for all SDK operations
+- **Components**:
+  - `common.ts`: Core enums and configuration types
+  - `quote.ts`: Trading and quote-related types
+  - `pools.ts`: Pool and liquidity operation types
+  - `assets.ts`: Asset and asset list types
+  - `price.ts`: Price data types
+  - `send.ts`: Transaction submission types
+
+## Authentication System
+
+### API Key Authentication
+- **Method**: Bearer token authentication
+- **Format**: API keys must start with `sk_`
+- **Usage**: Set once during SDK initialization
+- **Security**: Server-side only, never expose to frontend
+
+### Configuration
+```typescript
+interface SoroswapSDKConfig {
+  apiKey: string;                    // Required: API key starting with 'sk_'
+  baseUrl?: string;                  // Optional: Custom API base URL
+  defaultNetwork?: SupportedNetworks; // Optional: MAINNET or TESTNET
+  timeout?: number;                  // Optional: Request timeout (default: 30000ms)
+}
+```
+
+## API Operations
+
+### 1. Trading Operations
+
+#### Get Protocols
+- **Method**: `getProtocols(network?: SupportedNetworks)`
+- **Purpose**: Retrieve available trading protocols
+- **Returns**: `string[]` - Array of protocol names
+- **Example**: `['sdex', 'soroswap', 'phoenix', 'aqua']`
+
+#### Get Quote
+- **Method**: `quote(quoteRequest: QuoteRequest, network?: SupportedNetworks)`
+- **Purpose**: Get trading quote for token swap
+- **Parameters**:
+  - `assetIn`: Source token contract address
+  - `assetOut`: Destination token contract address
+  - `amount`: Amount as BigInt (required)
+  - `tradeType`: EXACT_IN or EXACT_OUT
+  - `protocols`: Array of protocols to use
+  - `parts`: Number of parts for trade splitting (optional)
+  - `slippageBps`: Slippage tolerance in basis points (optional)
+  - `maxHops`: Maximum number of hops (optional)
+  - `assetList`: Supported asset lists (optional)
+  - `feeBps`: Platform fee in basis points (optional)
+  - `gaslessTrustline`: Enable gasless trustline creation (optional)
+- **Returns**: `QuoteResponse` - Detailed quote information
+
+#### Build Transaction
+- **Method**: `build(buildQuoteRequest: BuildQuoteRequest, network?: SupportedNetworks)`
+- **Purpose**: Convert quote into executable XDR transaction
+- **Parameters**:
+  - `quote`: Quote response from previous call
+  - `from`: Source wallet address (optional)
+  - `to`: Destination wallet address (optional)
+  - `referralId`: Referral wallet address (optional)
+- **Returns**: `BuildQuoteResponse` - Contains XDR string
+
+#### Send Transaction
+- **Method**: `send(xdr: string, launchtube: boolean = false, network?: SupportedNetworks)`
+- **Purpose**: Submit signed transaction to network
+- **Parameters**:
+  - `xdr`: Signed transaction XDR string
+  - `launchtube`: Use launchtube for submission (optional)
+  - `network`: Network override (optional)
+- **Returns**: Transaction result
+
+### 2. Pool Operations
+
+#### Get Pools
+- **Method**: `getPools(network: SupportedNetworks, protocols: string[], assetList?: (SupportedAssetLists | string)[])`
+- **Purpose**: Retrieve pools for specific protocols
+- **Parameters**:
+  - `network`: Target network (MAINNET/TESTNET)
+  - `protocols`: Array of protocol names
+  - `assetList`: Optional asset list filter
+- **Returns**: `Pool[]` - Array of pool information
+
+#### Get Pool by Tokens
+- **Method**: `getPoolByTokens(assetA: string, assetB: string, network: SupportedNetworks, protocols: string[])`
+- **Purpose**: Get specific pool for token pair
+- **Parameters**:
+  - `assetA`: First token contract address
+  - `assetB`: Second token contract address
+  - `network`: Target network
+  - `protocols`: Array of protocol names
+- **Returns**: `Pool[]` - Array of matching pools
+
+### 3. Liquidity Operations
+
+#### Add Liquidity
+- **Method**: `addLiquidity(liquidityData: AddLiquidityRequest, network?: SupportedNetworks)`
+- **Purpose**: Add liquidity to existing pool
+- **Parameters**:
+  - `assetA`: First token contract address
+  - `assetB`: Second token contract address
+  - `amountA`: Amount of first token (BigInt)
+  - `amountB`: Amount of second token (BigInt)
+  - `to`: Recipient address
+  - `slippageBps`: Slippage tolerance (optional)
+- **Returns**: `LiquidityResponse` - Transaction XDR and pool info
+
+#### Remove Liquidity
+- **Method**: `removeLiquidity(liquidityData: RemoveLiquidityRequest, network?: SupportedNetworks)`
+- **Purpose**: Remove liquidity from pool
+- **Parameters**:
+  - `assetA`: First token contract address
+  - `assetB`: Second token contract address
+  - `liquidity`: LP token amount to remove (BigInt)
+  - `amountA`: Minimum amount of first token (BigInt)
+  - `amountB`: Minimum amount of second token (BigInt)
+  - `to`: Recipient address
+  - `slippageBps`: Slippage tolerance (optional)
+- **Returns**: `LiquidityResponse` - Transaction XDR and pool info
+
+#### Get User Positions
+- **Method**: `getUserPositions(address: string, network?: SupportedNetworks)`
+- **Purpose**: Retrieve user's liquidity positions
+- **Parameters**:
+  - `address`: User wallet address
+  - `network`: Target network (optional)
+- **Returns**: `UserPosition[]` - Array of user positions
+
+### 4. Market Data Operations
+
+#### Get Asset Lists
+- **Method**: `getAssetList(name?: SupportedAssetLists)`
+- **Purpose**: Get asset list metadata or specific asset list
+- **Parameters**:
+  - `name`: Specific asset list name (optional)
+- **Returns**: `AssetList[]` or `AssetListInfo[]` depending on parameters
+
+#### Get Asset Prices
+- **Method**: `getPrice(assets: string | string[], network?: SupportedNetworks)`
+- **Purpose**: Retrieve current asset prices
+- **Parameters**:
+  - `assets`: Single asset or array of asset addresses
+  - `network`: Target network (optional)
+- **Returns**: `PriceData[]` - Array of price information
+
+### 5. System Operations
+
+#### Get Contract Address
+- **Method**: `getContractAddress(network: SupportedNetworks, contractName: 'factory' | 'router' | 'aggregator')`
+- **Purpose**: Get contract addresses for specific network
+- **Parameters**:
+  - `network`: Target network
+  - `contractName`: Contract type
+- **Returns**: `{address: string}` - Contract address
+
+## Type Definitions
+
+### Core Enums
+
+#### SupportedNetworks
+- `MAINNET`: Production Stellar network
+- `TESTNET`: Test Stellar network
+
+#### SupportedProtocols
+- `SOROSWAP`: Soroswap protocol
+- `PHOENIX`: Phoenix protocol
+- `AQUA`: Aqua protocol
+- `SDEX`: Stellar DEX
+
+#### SupportedAssetLists
+- `SOROSWAP`: Soroswap token list
+- `STELLAR_EXPERT`: Stellar Expert top 50 assets
+- `LOBSTR`: Lobstr curated assets
+- `AQUA`: Aqua pooled tokens
+
+#### TradeType
+- `EXACT_IN`: Exact input amount trading
+- `EXACT_OUT`: Exact output amount trading
+
+#### SupportedPlatforms
+- `SDEX`: Stellar DEX platform
+- `AGGREGATOR`: Aggregator platform
+- `ROUTER`: Router platform
+
+### Request/Response Types
+
+#### QuoteRequest
+```typescript
+interface QuoteRequest {
+  assetIn: string;
+  assetOut: string;
+  amount: bigint;
+  tradeType: TradeType;
+  protocols: SupportedProtocols[];
+  parts?: number;
+  slippageBps?: number;
+  maxHops?: number;
+  assetList?: (SupportedAssetLists | string)[];
+  feeBps?: number;
+  gaslessTrustline?: GaslessTrustlineType;
+}
+```
+
+#### QuoteResponse
+Union type supporting both EXACT_IN and EXACT_OUT trades:
+```typescript
+type QuoteResponse = ExactInQuoteResponse | ExactOutQuoteResponse;
+
+interface BaseQuoteResponse {
+  assetIn: string;
+  amountIn: bigint;
+  assetOut: string;
+  amountOut: bigint;
+  otherAmountThreshold: bigint;
+  priceImpactPct: string;
+  platform: SupportedPlatforms;
+  routePlan: RoutePlan[];
+  trustlineInfo?: TrustlineInfo;
+  platformFee?: PlatformFee;
+  gaslessTrustline?: GaslessTrustlineType;
+}
+```
+
+#### Pool
+```typescript
+interface Pool {
+  protocol: SupportedProtocols;
+  address: string;
+  tokenA: string;
+  tokenB: string;
+  reserveA: bigint;
+  reserveB: bigint;
+  ledger?: number;
+  reserveLp?: bigint;
+  stakeAddress?: string;
+  poolType?: string;
+  fee?: bigint;
+  totalFeeBps?: number;
+  // ... additional pool-specific fields
+}
+```
+
+## Error Handling
+
+### HTTP Client Error Transformation
+The SDK transforms all HTTP errors into structured error objects:
+```typescript
+interface APIError {
+  message: string;
+  statusCode: number;
+  timestamp: string;
+  path?: string;
+}
+```
+
+### Error Types
+1. **Server Response Errors**: HTTP 4xx/5xx responses
+2. **Network Errors**: No response received
+3. **Request Errors**: Invalid request configuration
+4. **Authentication Errors**: Invalid API key
+
+### Best Practices
+- Always wrap SDK calls in try-catch blocks
+- Check error status codes for specific handling
+- Log errors appropriately for debugging
+- Handle network timeouts gracefully
+
+## Development Configuration
+
+### Build System
+- **TypeScript**: Target ES2020, CommonJS modules
+- **Output**: `dist/` directory with declaration files
+- **Source Maps**: Generated for debugging
+- **Strict Mode**: Enabled for type safety
+
+### Testing Strategy
+
+#### Unit Tests
+- **Location**: `tests/`
+- **Framework**: Jest
+- **Approach**: Mock all external dependencies
+- **Coverage**: Comprehensive coverage of SDK logic
+- **Command**: `pnpm test`
+
+#### Integration Tests
+- **Location**: `tests/integration/`
+- **Framework**: Jest with custom config
+- **Approach**: Test against real Soroswap API
+- **Requirements**: Valid API key in environment
+- **Command**: `pnpm run test:integration`
+
+### Code Quality
+- **ESLint**: TypeScript-specific rules
+- **Prettier**: Code formatting (implied)
+- **Pre-commit**: Tests and linting before publish
+
+## Security Considerations
+
+### API Key Security
+- Store API keys in environment variables
+- Never commit API keys to version control
+- Use different keys for different environments
+- Rotate keys regularly
+
+### Server-Side Only
+- SDK designed for server-side use only
+- API keys should never be exposed to frontend
+- Create proxy endpoints for frontend integration
+
+### Amount Handling
+- All trading amounts must be BigInt
+- Proper serialization in HTTP client
+- Type safety enforced at TypeScript level
+
+## Performance Considerations
+
+### HTTP Client
+- Connection pooling via axios
+- Configurable timeouts
+- Request/response interceptors
+- Automatic retry logic (implicit)
+
+### BigInt Serialization
+- Custom JSON serialization for BigInt values
+- Automatic conversion to strings for API
+
+### Asset List Transformation
+- Efficient enum-to-string conversion
+- Support for both enum and string inputs
+- Minimal processing overhead
+
+## Examples and Use Cases
+
+### Basic Trading Flow
+1. Initialize SDK with API key
+2. Get available protocols
+3. Create quote request with BigInt amount
+4. Get quote from API
+5. Build transaction XDR
+6. Sign transaction with external signer
+7. Send signed transaction
+
+### Liquidity Management Flow
+1. Get existing pools to understand ratios
+2. Calculate proportional amounts
+3. Create liquidity request
+4. Build transaction XDR
+5. Sign and send transaction
+
+### Market Data Retrieval
+1. Get asset lists for token information
+2. Retrieve current prices
+3. Monitor pool reserves and ratios
+4. Track user positions
+
+## Package Information
+
+### Dependencies
+- **axios**: HTTP client library
+- **TypeScript**: Type definitions and compilation
+- **Jest**: Testing framework
+- **ESLint**: Code linting
+
+### Package Details
+- **Name**: `@soroswap/sdk`
+- **Version**: 0.3.2
+- **License**: MIT
+- **Node.js**: >=16.0.0
+- **Main**: `dist/index.js`
+- **Types**: `dist/index.d.ts`
+
+### Repository
+- **GitHub**: https://github.com/soroswap/sdk
+- **Homepage**: https://soroswap.finance
+- **Documentation**: https://docs.soroswap.finance
+
+This SDK provides a comprehensive, type-safe interface to the Soroswap ecosystem, enabling developers to build sophisticated DeFi applications on the Stellar network with confidence and ease.

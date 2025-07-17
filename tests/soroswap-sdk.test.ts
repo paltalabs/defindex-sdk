@@ -5,6 +5,7 @@ import {
   AssetListInfo,
   BuildQuoteRequest,
   BuildQuoteResponse,
+  GaslessTrustlineType,
   LiquidityAction,
   LiquidityResponse,
   Pool,
@@ -203,7 +204,7 @@ describe('SoroswapSDK - Comprehensive Unit Tests', () => {
         ...mockQuoteRequest,
         parts: 5,
         feeBps: 30,
-        gaslessTrustline: true
+        gaslessTrustline: GaslessTrustlineType.CREATE
       };
 
       mockHttpClient.post = jest.fn().mockResolvedValue(mockQuoteResponse);

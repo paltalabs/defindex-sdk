@@ -1,5 +1,9 @@
 import { SupportedAssetLists, SupportedPlatforms, SupportedProtocols, TradeType } from "./common";
 
+export enum GaslessTrustlineType {
+  CREATE = 'create',
+  // REMOVE = 'remove',
+}
 // Quote types
 export interface QuoteRequest {
   assetIn: string;
@@ -12,7 +16,7 @@ export interface QuoteRequest {
   maxHops?: number;
   assetList?: (SupportedAssetLists | string)[];
   feeBps?: number;
-  gaslessTrustline?: boolean;
+  gaslessTrustline?: GaslessTrustlineType;
 }
 
 export interface BuildQuoteRequest {
@@ -124,7 +128,7 @@ interface BaseQuoteResponse {
   routePlan: RoutePlan[]
   trustlineInfo?: TrustlineInfo
   platformFee?: PlatformFee
-  gaslessTrustline?: boolean
+  gaslessTrustline?: GaslessTrustlineType
 }
 
 export interface ExactInQuoteResponse extends BaseQuoteResponse {
