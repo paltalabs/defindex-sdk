@@ -24,6 +24,7 @@ export interface BuildQuoteRequest {
   from?: string;
   to?: string;
   referralId?: string;
+  sponsor?: string;
 }
 
 export interface BuildQuoteResponse {
