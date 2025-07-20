@@ -37,39 +37,18 @@ export class HttpClient {
     this.client.interceptors.response.use(
       (response: any) => response,
       (error: any) => {
-        return Promise.reject(this.transformError(error));
+        // Return the exact same error content from the API
+        if (error.response) {
+          // Server responded with error status - return the exact response data
+          return Promise.reject(error.response.data);
+        } else {
+          // Network or other errors - return the original error
+          return Promise.reject(error);
+        }
       }
     );
   }
 
-  /**
-   * Transform axios error to APIError
-   */
-  private transformError(error: any) {
-    if (error.response) {
-      // Server responded with error status
-      return {
-        message: error.response.data?.message || error.message,
-        statusCode: error.response.status,
-        timestamp: new Date().toISOString(),
-        path: error.response.config?.url,
-      };
-    } else if (error.request) {
-      // Request was made but no response received
-      return {
-        message: 'Network error: No response received',
-        statusCode: 0,
-        timestamp: new Date().toISOString(),
-      };
-    } else {
-      // Something else happened
-      return {
-        message: error.message || 'Unknown error',
-        statusCode: 0,
-        timestamp: new Date().toISOString(),
-      };
-    }
-  }
 
   /**
    * GET request
