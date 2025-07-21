@@ -232,7 +232,9 @@ describe('SoroswapSDK - Comprehensive Unit Tests', () => {
     };
 
     const mockBuildResponse: BuildQuoteResponse = {
-      xdr: 'MOCK_TRANSACTION_XDR_12345'
+      xdr: 'MOCK_TRANSACTION_XDR_12345',
+      action: 'SIGN_USER_TRANSACTION',
+      description: 'Mock transaction description'
     };
 
     it('should build transaction with default network', async () => {
