@@ -25,10 +25,13 @@ export interface BuildQuoteRequest {
   to?: string;
   referralId?: string;
   sponsor?: string;
+  signedUserXdr?: string;
 }
 
 export interface BuildQuoteResponse {
   xdr: string;
+  action: string;
+  description: string;
 }
 export interface DistributionReturn {
   protocol_id: SupportedProtocols
