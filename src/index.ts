@@ -1,5 +1,5 @@
 // Main SDK class
-export { SoroswapSDK } from './soroswap-sdk';
+export { DefindexSDK, DefindexSDKConfig } from './defindex-sdk';
 
 // Export all types for TypeScript users
 export * from './types';
@@ -8,5 +8,5 @@ export * from './types';
 export { HttpClient } from './clients/http-client';
 
 // Default export is the main SDK class
-import { SoroswapSDK } from './soroswap-sdk';
-export default SoroswapSDK; 
+import { DefindexSDK } from './defindex-sdk';
+export default DefindexSDK; 

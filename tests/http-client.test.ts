@@ -13,6 +13,11 @@ describe('HttpClient', () => {
     mockAxiosInstance = {
       get: jest.fn(),
       post: jest.fn(),
+      defaults: {
+        headers: {
+          common: {}
+        }
+      },
       interceptors: {
         request: { use: jest.fn() },
         response: { use: jest.fn() }
@@ -22,7 +27,7 @@ describe('HttpClient', () => {
     mockedAxios.create.mockReturnValue(mockAxiosInstance);
 
     httpClient = new HttpClient(
-      'https://test-api.soroswap.finance',
+      'https://api.defindex.io',
       'sk_test_api_key_123',
       15000
     );
@@ -33,13 +38,27 @@ describe('HttpClient', () => {
   });
 
   describe('Constructor', () => {
-    it('should create axios instance with correct configuration', () => {
+    it('should create axios instance with correct configuration when API key provided', () => {
       expect(mockedAxios.create).toHaveBeenCalledWith({
-        baseURL: 'https://test-api.soroswap.finance',
+        baseURL: 'https://api.defindex.io',
         timeout: 15000,
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer sk_test_api_key_123'
+        },
+        transformRequest: expect.any(Array)
+      });
+    });
+
+    it('should create axios instance without Authorization header when no API key provided', () => {
+      jest.clearAllMocks();
+      new HttpClient('https://api.defindex.io', '', 15000);
+      
+      expect(mockedAxios.create).toHaveBeenCalledWith({
+        baseURL: 'https://api.defindex.io',
+        timeout: 15000,
+        headers: {
+          'Content-Type': 'application/json'
         },
         transformRequest: expect.any(Array)
       });
@@ -223,6 +242,14 @@ describe('HttpClient', () => {
 
       const createCall = mockedAxios.create.mock.calls[0]?.[0];
       expect((createCall?.headers as any)?.['Authorization']).toBe('Bearer sk_live_another_key_456');
+    });
+
+    it('should update API key after initialization', () => {
+      const newApiKey = 'sk_new_key_789';
+      
+      httpClient.setApiKey(newApiKey);
+
+      expect(mockAxiosInstance.defaults.headers.common['Authorization']).toBe(`Bearer ${newApiKey}`);
     });
   });
 });

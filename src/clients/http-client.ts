@@ -18,7 +18,7 @@ export class HttpClient {
       timeout,
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`,
+        ...(apiKey && { 'Authorization': `Bearer ${apiKey}` }),
       },
       // Add custom transformRequest to handle BigInt serialization
       transformRequest: [
@@ -64,6 +64,20 @@ export class HttpClient {
   async post<T>(url: string, data?: any, config?: AxiosRequestConfig): Promise<T> {
     const response: AxiosResponse<T> = await this.client.post(url, data, config);
     return response.data;
+  }
+
+  /**
+   * Set Authorization header
+   */
+  setAuthorizationHeader(token: string): void {
+    this.client.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+  }
+
+  /**
+   * Set API key for authentication
+   */
+  setApiKey(apiKey: string): void {
+    this.client.defaults.headers.common['Authorization'] = `Bearer ${apiKey}`;
   }
 
   /**
