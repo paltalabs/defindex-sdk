@@ -1,7 +1,7 @@
 {
-  "name": "@soroswap/sdk",
+  "name": "@defindex/sdk",
   "version": "0.3.6",
-  "description": "Official TypeScript SDK for Soroswap.Finance API - DEX and exchange aggregator on Stellar",
+  "description": "Official TypeScript SDK for DeFindex API",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "files": [
@@ -25,27 +25,26 @@
     "clean": "rimraf dist"
   },
   "keywords": [
-    "soroswap",
+    "DeFindex",
     "stellar",
     "soroban",
-    "dex",
     "defi",
-    "aggregator",
-    "swap",
-    "liquidity",
+    "vault",
+    "yield",
+    "yield farming",
     "sdk",
     "typescript"
   ],
-  "author": "Soroswap Team",
+  "author": "Paltalabs Team",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/soroswap/sdk.git"
+    "url": "https://github.com/paltalabs/defindex-sdk.git"
   },
   "bugs": {
-    "url": "https://github.com/soroswap/sdk/issues"
+    "url": "https://github.com/paltalabs/defindex-sdk/issues"
   },
-  "homepage": "https://soroswap.finance",
+  "homepage": "https://defindex.io",
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.1",
     "@eslint/js": "^9.30.0",

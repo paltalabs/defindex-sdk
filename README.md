@@ -1,56 +1,71 @@
-# Soroswap SDK
+# DeFindex SDK
 
-Official TypeScript SDK for [Soroswap.Finance](https://soroswap.finance) - The first DEX and exchange aggregator built on Stellar, powered by smart contracts on Soroban.
+Official TypeScript SDK for [DeFindex](https://defindex.io) - A decentralized vault management system built on Stellar using Soroban smart contracts.
 
 ## 🌟 Features
 
-- **🔐 Simple API Key Authentication**: Secure API key-based authentication
-- **💱 Trading Operations**: Get quotes, build transactions, send them to the network
-- **💧 Liquidity Management**: Add/remove liquidity and track positions
-- **📊 Market Data**: Access pools, prices, and asset information
-- **🔒 Server-Side Focused**: Secure handling of API keys and sensitive operations
+- **🔐 JWT Authentication**: Secure email/password authentication with JWT tokens
+- **🏦 Vault Operations**: Create, deposit, withdraw, and manage decentralized vaults
+- **🏭 Factory Operations**: Deploy new vaults with custom configurations
+- **👑 Admin Operations**: Emergency rescue, strategy management for vault operators
+- **📊 Real-time Data**: Vault balances, APY tracking, and comprehensive vault information
+- **🔒 Server-Side Focused**: Secure handling of credentials and sensitive operations
 - **📝 TypeScript Support**: Full type safety with comprehensive interfaces
-- **⚡ Lightweight**: No complex authentication flows or token management
-- **🧪 Well Tested**: Comprehensive unit test coverage
+- **⚡ Lightweight**: Simple authentication and comprehensive error handling
+- **🧪 Well Tested**: Comprehensive unit and integration test coverage
 
 ## 🚀 Installation
 
 ```bash
-pnpm install soroswap-sdk
+npm install defindex-sdk
 ```
 
 ## 📖 Quick Start
 
 ```typescript
-import { SoroswapSDK, SupportedNetworks, SupportedProtocols, TradeType } from '@soroswap/sdk';
+import { DefindexSDK, SupportedNetworks } from 'defindex-sdk';
 
-// Initialize the SDK
-const soroswapClient = new SoroswapSDK({
-  apiKey: 'sk_your_api_key_here'
+// Initialize with API key (recommended)
+const sdk = new DefindexSDK({
+  apiKey: 'sk_your_api_key_here',
+  baseUrl: 'https://api.defindex.io'
 });
 
-// Get a quote for a swap
-const quote = await soroswapClient.quote({
-  assetIn: 'CAS3J7GYLGXMF6TDJBBYYSE3HQ6BBSMLNUQ34T6TZMYMW2EVH34XOWMA',
-  assetOut: 'CDTKPWPLOURQA2SGTKTUQOWRCBZEORB4BWBOMJ3D3ZTQQSGE5F6JBQLV',
-  amount: 10000000n, // Note: Amount must be a BigInt
-  tradeType: TradeType.EXACT_IN,
-  protocols: [SupportedProtocols.SDEX, SupportedProtocols.SOROSWAP, SupportedProtocols.AQUA],
+// Or initialize with automatic login
+const sdk = new DefindexSDK({
+  email: 'your-email@example.com',
+  password: 'your-secure-password',
+  baseUrl: 'https://api.defindex.io'
 });
 
-// Build the transaction XDR from the quote
-const buildResponse = await soroswapClient.build({
-  quote,
-  from: 'YOUR_WALLET_ADDRESS',
-  to: 'RECIPIENT_ADDRESS'
+// Or initialize without authentication and set API key later
+const sdk = new DefindexSDK({
+  baseUrl: 'https://api.defindex.io'
+});
+sdk.setApiKey('sk_your_api_key_here');
+
+// Manual login (alternative to API key)
+await sdk.login({
+  email: 'your-email@example.com',
+  password: 'your-secure-password'
 });
 
-// Sign the transaction with your preferred signer
-const signedXdr = await yourSigner.sign(buildResponse.xdr);
+// Get vault information
+const vaultAddress = 'GVAULT_CONTRACT_ADDRESS...';
+const vaultInfo = await sdk.getVaultInfo(vaultAddress, SupportedNetworks.TESTNET);
+console.log(`Vault: ${vaultInfo.name} (${vaultInfo.symbol})`);
 
-// Send the signed transaction
-const result = await soroswapClient.send(signedXdr, false); // launchtube = false
-console.log('Transaction result:', result);
+// Deposit to vault
+const depositResponse = await sdk.depositToVault(vaultAddress, {
+  amounts: [1000000, 2000000], // Amounts for each asset
+  caller: 'GUSER_ADDRESS...',
+  invest: true,
+  slippageBps: 100 // 1% slippage tolerance
+}, SupportedNetworks.TESTNET);
+
+// Sign the XDR with your wallet and submit
+const signedXdr = await yourWallet.sign(depositResponse.xdr);
+const result = await sdk.sendTransaction(signedXdr, SupportedNetworks.TESTNET, false);
 ```
 
 ## 🔧 Configuration
@@ -58,32 +73,31 @@ console.log('Transaction result:', result);
 ### SDK Configuration Options
 
 ```typescript
-interface SoroswapSDKConfig {
-  apiKey: string;                   // Your Soroswap API key (starts with 'sk_')
-  baseUrl?: string;                 // Custom API base URL (defaults to 'https://api.soroswap.finance')
-  defaultNetwork?: SupportedNetworks;  // SupportedNetworks.MAINNET | SupportedNetworks.TESTNET
-  timeout?: number;                // Request timeout in ms (defaults to 30000) you might want to adjust this if using launchtube
+interface DefindexSDKConfig {
+  apiKey?: string;         // API key for authentication (recommended)
+  email?: string;          // Email for automatic login (alternative to API key)
+  password?: string;       // Password for automatic login (alternative to API key)
+  baseUrl?: string;        // Custom API base URL (defaults to 'https://api.defindex.io')
+  timeout?: number;        // Request timeout in ms (defaults to 30000)
 }
 ```
 
 ### Environment Variables
 
-For better security, you can use environment variables:
+For better security, use environment variables:
 
 ```typescript
-const soroswapClient = new SoroswapSDK({
-  apiKey: process.env.SOROSWAP_API_KEY!,
-  baseUrl: process.env.SOROSWAP_API_URL, // Optional: for localhost or custom API
-  defaultNetwork: process.env.NODE_ENV === 'production' 
-    ? SupportedNetworks.MAINNET 
-    : SupportedNetworks.TESTNET
+// Using API key (recommended)
+const sdk = new DefindexSDK({
+  apiKey: process.env.DEFINDEX_API_KEY,
+  baseUrl: process.env.DEFINDEX_API_URL || 'https://api.defindex.io'
 });
 
-// Example for local development:
-const localClient = new SoroswapSDK({
-  apiKey: 'sk_local_api_key',
-  baseUrl: 'http://localhost:3000',
-  defaultNetwork: SupportedNetworks.TESTNET
+// Using email/password (alternative)
+const sdk = new DefindexSDK({
+  email: process.env.DEFINDEX_EMAIL,
+  password: process.env.DEFINDEX_PASSWORD,
+  baseUrl: process.env.DEFINDEX_API_URL || 'https://api.defindex.io'
 });
 ```
 
@@ -91,296 +105,256 @@ const localClient = new SoroswapSDK({
 
 ### Authentication
 
-The SDK uses API key authentication - no complex authentication flows needed:
-
+#### User Registration
 ```typescript
-// Simply initialize with your API key
-const soroswapClient = new SoroswapSDK({
-  apiKey: 'sk_your_api_key_here'
+await sdk.register({
+  email: 'newuser@example.com',
+  password: 'securePassword123!',
+  username: 'johndoe'
 });
 ```
 
-### Trading Operations
-
-#### Get Available Protocols
-
+#### User Login
 ```typescript
-const protocols = await soroswapClient.getProtocols(SupportedNetworks.MAINNET);
-// Returns: ['sdex', 'soroswap', 'phoenix', 'aqua']
-```
-
-#### Get Quote
-
-```typescript
-const quote = await soroswapClient.quote({
-  assetIn: 'TOKEN_A_CONTRACT',
-  assetOut: 'TOKEN_B_CONTRACT',
-  amount: 1000000n, // BigInt required
-  tradeType: TradeType.EXACT_IN,
-  protocols: [SupportedProtocols.SOROSWAP, SupportedProtocols.AQUA],
-  slippageBps: '50', // 0.5% in basis points
-  maxHops: 2,
-  feeBps: 30, // Optional fee in basis points
+const response = await sdk.login({
+  email: 'user@example.com',
+  password: 'securePassword123!'
 });
+console.log('Access token:', response.access_token);
 ```
 
-#### Build Transaction
-
-After getting a quote, build the transaction XDR:
-
+#### Token Refresh
 ```typescript
-const buildResponse = await soroswapClient.build({
-  quote: quote,
-  from: 'YOUR_WALLET_ADDRESS',
-  to: 'RECIPIENT_ADDRESS', // Optional, defaults to 'from'
-  referralId: 'REFERRAL_WALLET_ADDRESS' // Required if quote includes feeBps
+const response = await sdk.refreshToken();
+```
+
+### API Key Management
+
+#### Generate API Key
+```typescript
+const apiKey = await sdk.generateApiKey({
+  name: 'Production API Key'
 });
-
-// buildResponse.xdr contains the transaction ready for signing
+console.log('API Key:', apiKey.key);
 ```
 
-#### Send Signed Transaction
-
+#### List User API Keys
 ```typescript
-const result = await soroswapClient.send(
-  signedXdr,           // The signed transaction XDR
-  false,               // launchtube: boolean (default false)
-  SupportedNetworks.MAINNET  // Optional network override
+const apiKeys = await sdk.getUserApiKeys();
+```
+
+#### Revoke API Key
+```typescript
+await sdk.revokeApiKey(keyId);
+```
+
+### Factory Operations
+
+#### Get Factory Address
+```typescript
+const factory = await sdk.getFactoryAddress(SupportedNetworks.TESTNET);
+console.log('Factory address:', factory.address);
+```
+
+#### Create Vault
+```typescript
+const vaultConfig = {
+  roles: {
+    0: "GEMERGENCY_MANAGER_ADDRESS...",
+    1: "GFEE_RECEIVER_ADDRESS...",
+    2: "GVAULT_MANAGER_ADDRESS...",
+    3: "GREBALANCE_MANAGER_ADDRESS..."
+  },
+  vault_fee_bps: 100, // 1% fee
+  assets: [{
+    address: "CUSDC_CONTRACT_ADDRESS...",
+    strategies: [{
+      address: "GSTRATEGY_CONTRACT_ADDRESS...",
+      name: "USDC Lending Strategy",
+      paused: false
+    }]
+  }],
+  name_symbol: { 
+    name: "My DeFi Vault", 
+    symbol: "MDV" 
+  },
+  upgradable: true,
+  caller: "GCREATOR_ADDRESS..."
+};
+
+const response = await sdk.createVault(vaultConfig, SupportedNetworks.TESTNET);
+```
+
+### Vault Operations
+
+#### Get Vault Information
+```typescript
+const vaultInfo = await sdk.getVaultInfo(vaultAddress, SupportedNetworks.TESTNET);
+console.log(`Total Assets: ${vaultInfo.totalAssets}`);
+console.log(`Vault Fee: ${vaultInfo.feesBps.vaultFee / 100}%`);
+```
+
+#### Get Vault Balance
+```typescript
+const balance = await sdk.getVaultBalance(
+  vaultAddress, 
+  userAddress, 
+  SupportedNetworks.TESTNET
+);
+console.log(`Vault Shares: ${balance.dfTokens}`);
+```
+
+#### Deposit to Vault
+```typescript
+const depositResponse = await sdk.depositToVault(vaultAddress, {
+  amounts: [1000000, 2000000],
+  caller: 'GUSER_ADDRESS...',
+  invest: true,
+  slippageBps: 100
+}, SupportedNetworks.TESTNET);
+```
+
+#### Withdraw from Vault
+```typescript
+// Withdraw specific amounts
+const withdrawResponse = await sdk.withdrawFromVault(vaultAddress, {
+  amounts: [500000, 1000000],
+  caller: 'GUSER_ADDRESS...',
+  slippageBps: 100
+}, SupportedNetworks.TESTNET);
+
+// Withdraw by shares
+const shareResponse = await sdk.withdrawShares(vaultAddress, {
+  shares: 1000000,
+  caller: 'GUSER_ADDRESS...',
+  slippageBps: 100
+}, SupportedNetworks.TESTNET);
+```
+
+#### Get Vault APY
+```typescript
+const apy = await sdk.getVaultAPY(vaultAddress, SupportedNetworks.TESTNET);
+console.log(`Current APY: ${apy.apyPercent}%`);
+```
+
+### Vault Management (Admin Operations)
+
+#### Emergency Rescue
+```typescript
+// Requires Emergency Manager role
+const response = await sdk.emergencyRescue(vaultAddress, {
+  strategy_address: 'GSTRATEGY_TO_RESCUE...',
+  caller: 'GEMERGENCY_MANAGER_ADDRESS...'
+}, SupportedNetworks.TESTNET);
+```
+
+#### Pause/Unpause Strategy
+```typescript
+// Requires Strategy Manager role
+await sdk.pauseStrategy(vaultAddress, {
+  strategy_address: 'GSTRATEGY_TO_PAUSE...',
+  caller: 'GSTRATEGY_MANAGER_ADDRESS...'
+}, SupportedNetworks.TESTNET);
+
+await sdk.unpauseStrategy(vaultAddress, {
+  strategy_address: 'GSTRATEGY_TO_UNPAUSE...',
+  caller: 'GSTRATEGY_MANAGER_ADDRESS...'
+}, SupportedNetworks.TESTNET);
+```
+
+### Transaction Management
+
+#### Send Transaction
+```typescript
+// Submit via Stellar directly
+const response = await sdk.sendTransaction(
+  signedXDR, 
+  SupportedNetworks.TESTNET,
+  false // Don't use LaunchTube
+);
+
+// Submit via LaunchTube (faster, more reliable)
+const response = await sdk.sendTransaction(
+  signedXDR, 
+  SupportedNetworks.TESTNET,
+  true // Use LaunchTube
 );
 ```
 
-### Pool Operations
+### System Operations
 
-#### Get Pools
-
+#### Health Check
 ```typescript
-// Get all pools for specific protocols
-const pools = await soroswapClient.getPools(
-  SupportedNetworks.MAINNET,
-  [SupportedProtocols.SOROSWAP, SupportedProtocols.AQUA],
-  [SupportedAssetLists.SOROSWAP] // Optional asset list filter
-);
-
-// Get specific pool for token pair
-const pool = await soroswapClient.getPoolByTokens(
-  'TOKEN_A_CONTRACT',
-  'TOKEN_B_CONTRACT',
-  SupportedNetworks.MAINNET,
-  [SupportedProtocols.SOROSWAP]
-);
-```
-
-### Liquidity Operations
-
-#### Add Liquidity
-
-**Important**: Before adding liquidity, you should fetch the existing pool to calculate the proper token proportions. The amounts must maintain the current pool ratio, otherwise the transaction will fail during simulation.
-
-```typescript
-// First, get the current pool to understand the ratio
-const pools = await soroswapClient.getPoolByTokens(
-  'TOKEN_A_CONTRACT',
-  'TOKEN_B_CONTRACT',
-  SupportedNetworks.MAINNET,
-  [SupportedProtocols.SOROSWAP]
-);
-
-if (pools.length > 0) {
-  const pool = pools[0];
-  const ratio = Number(pool.reserveB) / Number(pool.reserveA);
-  
-  // Calculate proportional amounts
-  const amountA = '1000000';
-  const amountB = (Number(amountA) * ratio).toString();
-  
-  const addLiquidityTx = await soroswapClient.addLiquidity({
-    assetA: 'TOKEN_A_CONTRACT',
-    assetB: 'TOKEN_B_CONTRACT',
-    amountA: amountA,
-    amountB: amountB,
-    to: 'YOUR_WALLET_ADDRESS',
-    slippageBps: '50' // 0.5%
-  });
-
-  // Sign and send the transaction
-  const signedXdr = await yourSigner.sign(addLiquidityTx.xdr);
-  const result = await soroswapClient.send(signedXdr, false);
+const health = await sdk.healthCheck();
+if (health.status.reachable) {
+  console.log('API is healthy');
 }
-```
-
-> **Note**: All liquidity transactions are simulated before execution. If the amounts don't match the required proportions or if there are insufficient funds, the transaction will return an error during simulation.
-
-#### Remove Liquidity
-
-```typescript
-const removeLiquidityTx = await soroswapClient.removeLiquidity({
-  assetA: 'TOKEN_A_CONTRACT',
-  assetB: 'TOKEN_B_CONTRACT',
-  liquidity: '500000',
-  amountA: '450000',
-  amountB: '900000',
-  to: 'YOUR_WALLET_ADDRESS',
-  slippageBps: '50'
-});
-```
-
-#### Get User Positions
-
-```typescript
-const positions = await soroswapClient.getUserPositions(
-  'USER_WALLET_ADDRESS',
-  SupportedNetworks.MAINNET
-);
-```
-
-### Market Data
-
-#### Get Asset Prices
-
-```typescript
-// Single asset price
-const prices = await soroswapClient.getPrice(
-  'TOKEN_CONTRACT_ADDRESS',
-  SupportedNetworks.MAINNET
-);
-
-// Multiple asset prices
-const prices = await soroswapClient.getPrice([
-  'TOKEN_A_CONTRACT',
-  'TOKEN_B_CONTRACT'
-], SupportedNetworks.MAINNET);
-```
-
-#### Get Asset Lists
-
-```typescript
-// Get all available asset lists metadata
-const assetListsInfo = await soroswapClient.getAssetList();
-
-// Get specific asset list
-const soroswapAssets = await soroswapClient.getAssetList(SupportedAssetLists.SOROSWAP);
-```
-
-### System Information
-
-#### Get Contract Addresses
-
-```typescript
-const factoryAddress = await soroswapClient.getContractAddress(SupportedNetworks.MAINNET, 'factory');
-const routerAddress = await soroswapClient.getContractAddress(SupportedNetworks.MAINNET, 'router');
-const aggregatorAddress = await soroswapClient.getContractAddress(SupportedNetworks.MAINNET, 'aggregator');
 ```
 
 ## 🔐 Security Best Practices
 
-1. **Environment Variables**: Store API keys in environment variables, not in code
+1. **Environment Variables**: Store credentials in environment variables, not in code
 2. **Server-Side Only**: This SDK is designed for server-side use only
-3. **API Key Security**: Keep your API keys secure and never commit them to version control
+3. **Credential Security**: Keep credentials secure and never commit them to version control
 4. **Error Handling**: Always wrap API calls in try-catch blocks
+5. **Token Management**: Use refresh tokens for long-running applications
 
 ```typescript
 try {
-  const quote = await soroswapClient.quote(quoteParams);
-  const buildResponse = await soroswapClient.build({ quote, from: walletAddress });
+  const vaultInfo = await sdk.getVaultInfo(vaultAddress, network);
   // Handle success
 } catch (error) {
-  console.error('Quote/build failed:', error.message);
-  // Handle error
+  console.error('Operation failed:', error.message);
+  // Handle error appropriately
 }
 ```
+
+## 🔒 Vault Management Roles
+
+The SDK supports different operational roles:
+- **Vault Managers**: Can create and configure vaults
+- **Emergency Managers**: Can execute emergency rescues
+- **Strategy Managers**: Can pause/unpause individual strategies
+- **Regular Users**: Can deposit, withdraw, and view vault information
 
 ## 🏗️ Development
 
 ### Building
-
 ```bash
 pnpm run build
 ```
 
 ### Testing
 
-The SDK includes two types of tests:
-
 #### Unit Tests (Mocked)
-Fast tests that mock all external dependencies:
-
 ```bash
-# Run unit tests (default)
+# Run unit tests
 pnpm test
 
 # Run with coverage
 pnpm run test:coverage
 
-# Watch mode for development
+# Watch mode
 pnpm run test:watch
 ```
 
 #### Integration Tests (Real API)
-Tests that actually call the Soroswap API:
-
 ```bash
-# Set up API key first
-export SOROSWAP_API_KEY="sk_your_api_key_here"
+# Set up credentials first
+export DEFINDEX_API_EMAIL="your_email@example.com"
+export DEFINDEX_API_PASSWORD="your_password"
 
 # Run integration tests
 pnpm run test:integration
 
-# Run both unit and integration tests
+# Run all tests
 pnpm run test:all
 ```
 
-**Note**: Integration tests require a valid Soroswap API key and may fail due to network issues or API changes. See [Integration Test Documentation](./tests/integration/README.md) for detailed setup.
-
-### Linting
-
+### Code Quality
 ```bash
 pnpm run lint
 pnpm run lint:fix
-```
-
-## 🌐 Frontend Integration Considerations
-
-While this SDK is server-side focused, you can create secure frontend integrations:
-
-### Recommended Architecture
-
-```typescript
-// Backend API endpoint
-app.post('/api/quote', async (req, res) => {
-  try {
-    const soroswapClient = new SoroswapSDK({
-      apiKey: process.env.SOROSWAP_API_KEY!
-    });
-    
-    const quote = await soroswapClient.quote(req.body);
-    const buildResponse = await soroswapClient.build({
-      quote,
-      from: req.body.walletAddress
-    });
-    
-    // Only return the XDR and quote data, not sensitive info
-    res.json({
-      xdr: buildResponse.xdr,
-      quote: {
-        assetIn: quote.assetIn,
-        assetOut: quote.assetOut,
-        tradeType: quote.tradeType
-      }
-    });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
-
-// Frontend widget
-async function getQuoteAndBuild(quoteParams) {
-  const response = await fetch('/api/quote', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(quoteParams)
-  });
-  return response.json();
-}
 ```
 
 ## 📊 Type Definitions
@@ -389,59 +363,68 @@ The SDK exports comprehensive TypeScript types:
 
 ```typescript
 import {
-  SoroswapSDK,
-  SoroswapSDKConfig,
+  DefindexSDK,
+  DefindexSDKConfig,
   SupportedNetworks,
-  SupportedProtocols,
-  SupportedAssetLists,
-  TradeType,
-  QuoteRequest,
-  QuoteResponse,
-  BuildQuoteRequest,
-  BuildQuoteResponse,
-  Pool,
-  UserPosition,
-  PriceData,
-  AssetList,
-  AssetListInfo,
+  LoginParams,
+  RegisterParams,
+  CreateDefindexVault,
+  DepositToVaultParams,
+  WithdrawFromVaultParams,
+  WithdrawSharesParams,
+  VaultInfo,
+  VaultBalance,
+  VaultAPY,
   // ... and many more
-} from 'soroswap-sdk';
+} from 'defindex-sdk';
 ```
 
-### Example: Working with Types
+## 🌐 Frontend Integration
+
+While server-side focused, you can create secure frontend integrations:
 
 ```typescript
-import { 
-  QuoteRequest, 
-  TradeType, 
-  SupportedProtocols,
-  ExactInBuildTradeReturn 
-} from 'soroswap-sdk';
+// Backend API endpoint using API key (recommended)
+app.post('/api/vault-info', async (req, res) => {
+  try {
+    const sdk = new DefindexSDK({
+      apiKey: process.env.DEFINDEX_API_KEY
+    });
+    
+    const vaultInfo = await sdk.getVaultInfo(req.body.vaultAddress, req.body.network);
+    res.json(vaultInfo);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
 
-const quoteRequest: QuoteRequest = {
-  assetIn: 'TOKEN_A',
-  assetOut: 'TOKEN_B',
-  amount: 1000000n,
-  tradeType: TradeType.EXACT_IN,
-  protocols: [SupportedProtocols.SOROSWAP]
-};
-
-const quote = await soroswapClient.quote(quoteRequest);
-
-// Type-safe access to quote properties
-if (quote.tradeType === TradeType.EXACT_IN) {
-  const exactInQuote = quote as ExactInBuildTradeReturn;
-  console.log('Expected output:', exactInQuote.trade.expectedAmountOut);
-}
+// Alternative: Backend API endpoint using email/password
+app.post('/api/vault-info-alt', async (req, res) => {
+  try {
+    const sdk = new DefindexSDK({
+      email: process.env.DEFINDEX_EMAIL,
+      password: process.env.DEFINDEX_PASSWORD
+    });
+    
+    const vaultInfo = await sdk.getVaultInfo(req.body.vaultAddress, req.body.network);
+    res.json(vaultInfo);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
 ```
+
+## 📖 Documentation
+
+For comprehensive examples and detailed API documentation, see:
+- [EXAMPLES.md](./EXAMPLES.md) - Comprehensive usage examples
+- [API Documentation](https://api.defindex.io) - Complete API reference
 
 ## 🔗 Links
 
-- [Soroswap.Finance](https://soroswap.finance)
-- [Documentation](https://docs.soroswap.finance)
-- [API Documentation](https://api.soroswap.finance)
-- [GitHub Repository](https://github.com/soroswap/sdk)
+- [DeFindex](https://defindex.io)
+- [GitHub Repository](https://github.com/paltalabs/defindex-sdk)
 
 ---
 
-Built with ❤️ by the Soroswap team.
+Built with ❤️ by the PaltaLabs team.

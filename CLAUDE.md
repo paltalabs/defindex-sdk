@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is the official TypeScript SDK for Soroswap.Finance - a DEX and exchange aggregator built on Stellar using Soroban smart contracts. The SDK provides server-side access to trading operations, liquidity management, market data, and authentication.
+This is the official TypeScript SDK for DeFindex - a decentralized vault management system built on Stellar using Soroban smart contracts. The SDK provides server-side access to vault operations, factory deployments, authentication, and transaction management for the DeFindex ecosystem.
 
 ## Development Commands
 
@@ -31,30 +31,35 @@ This is the official TypeScript SDK for Soroswap.Finance - a DEX and exchange ag
 ## Architecture
 
 ### Core Components
-- **SoroswapSDK** (`src/soroswap-sdk.ts`) - Main SDK class that orchestrates all operations
-- **HttpClient** (`src/clients/http-client.ts`) - Centralized HTTP client with API key authentication
+- **DefindexSDK** (`src/defindex-sdk.ts`) - Main SDK class that orchestrates all operations
+- **HttpClient** (`src/clients/http-client.ts`) - Centralized HTTP client with Bearer token authentication
 
 ### API Operations
-The SDK provides methods for:
-- **Trading**: quote(), build(), send() - Get quotes, build transactions, submit to network
-- **Liquidity**: addLiquidity(), removeLiquidity(), getUserPositions()
-- **Market Data**: getPools(), getPrice(), getAssetList()
-- **System**: getProtocols(), getContractAddress()
+The SDK provides methods organized into key areas:
+- **Authentication**: login(), register(), refreshToken() - User management with JWT tokens
+- **Factory Operations**: getFactoryAddress(), createVault(), createVaultWithDeposit() - Vault creation and deployment
+- **Vault Operations**: getVaultInfo(), depositToVault(), withdrawFromVault(), withdrawShares(), getVaultBalance(), getVaultAPY()
+- **Vault Management**: emergencyRescue(), pauseStrategy(), unpauseStrategy() - Admin operations for vault managers
+- **Transaction Management**: sendTransaction() - Submit signed transactions to Stellar network
+- **System**: healthCheck() - API health monitoring
 
 ### Authentication Flow
-1. SDK initializes with API key
-2. HttpClient sets Authorization header with Bearer token
-3. All API calls use the same API key for authentication
-4. No token refresh or session management needed
+1. SDK can initialize with email/password for automatic login
+2. Manual login sets Authorization header with Bearer token
+3. JWT access tokens used for all authenticated requests
+4. Refresh token functionality available for token renewal
+5. Role-based access control for administrative operations
 
 ### Type System
 Comprehensive TypeScript types are defined in `src/types/`:
-- `common.ts` - Core enums and base types
-- `quote.ts` - Trading quote types
-- `pools.ts` - Pool and liquidity types
-- `assets.ts` - Asset and price types
-- `auth.ts` - Authentication types
-- `send.ts` - Transaction submission types
+- `base.types.ts` - Core enums (SupportedNetworks) and base interfaces
+- `auth.types.ts` - Authentication and user management types
+- `factory.types.ts` - Vault factory configuration and response types
+- `vault.types.ts` - Vault operations, deposits, withdrawals, and management types
+- `stellar.types.ts` - Transaction and blockchain interaction types
+- `error.types.ts` - Error handling and validation types
+- `network.types.ts` - Network configuration types
+- `index.ts` - Main type exports
 
 ## Testing Strategy
 
@@ -63,27 +68,31 @@ Comprehensive TypeScript types are defined in `src/types/`:
 - Mock all external dependencies using Jest
 - Focus on SDK logic and type safety
 - Configuration in `jest.config.js`
+- Excludes integration tests via `testPathIgnorePatterns`
 
 ### Integration Tests
-- Located in `tests/integration/`
-- Test against real Soroswap API
-- Require environment variables: `SOROSWAP_EMAIL`, `SOROSWAP_PASSWORD`
+- Located in `tests/integration/` directory
+- Test against real DeFindex API
+- Require environment variables for authentication
 - Configuration in `jest.integration.config.js`
+- Extended timeout (30s) for network operations
 - May be flaky due to network/API dependencies
 
 ## Environment Configuration
 
 ### Required Environment Variables for Integration Tests
 ```bash
-export SOROSWAP_API_KEY="sk_your_api_key_here"
+# Authentication credentials for DeFindex API
+export DEFINDEX_API_EMAIL="your_email@example.com"
+export DEFINDEX_API_PASSWORD="your_password"
 ```
 
 ### SDK Configuration
-The SDK accepts configuration including:
-- `apiKey` - API key for authentication (must start with 'sk_')
-- `baseUrl` - Custom API base URL (optional, defaults to 'https://api.soroswap.finance')
-- `defaultNetwork` - MAINNET or TESTNET
-- `timeout` - Request timeout (default 30s, consider increasing for launchtube)
+The SDK accepts a `DefindexSDKConfig` object including:
+- `apiKey` - API key for authentication (recommended, optional)
+- `email` and `password` - Credentials for automatic login (alternative to API key, optional)
+- `baseUrl` - Custom API base URL (optional, defaults to 'https://api.defindex.io')
+- `timeout` - Request timeout in milliseconds (default 30000)
 
 ## Build Configuration
 
@@ -102,41 +111,68 @@ The SDK accepts configuration including:
 ## Key Implementation Notes
 
 ### Authentication
-- Server-side only - API keys should never be exposed to frontend
-- Simple API key authentication with Bearer token
-- Use environment variables for API keys in production
+- API key authentication with Bearer tokens (recommended)
+- JWT-based authentication with Bearer tokens (alternative)
+- Automatic login capability in SDK constructor
+- Server-side focused - credentials should not be exposed to frontend
+- Support for token refresh workflows
 
-### Amount Handling
-- All amounts must be BigInt when passed to quote() method
-- String amounts used for liquidity operations
-- Proper type checking enforced in TypeScript
+### HTTP Client Architecture
+- Modified from original Soroswap implementation to support DeFindex authentication
+- Constructor signature changed to accept baseURL, timeout parameters separately
+- Uses axios with custom BigInt serialization support
+- Centralized error handling with API error passthrough
+
+### Vault Operations
+- All transaction-building methods return unsigned XDR for external signing
+- Network parameter required for most operations (MAINNET/TESTNET)
+- Comprehensive type safety for vault configurations and responses
+- Support for both regular operations and administrative management functions
 
 ### Error Handling
 - All API operations can throw errors
-- Wrap calls in try-catch blocks
+- HTTP errors are passed through from API responses
+- Network timeouts configurable per SDK instance
 - Integration tests may fail due to network issues
-- API key authentication errors will be returned immediately
 
 ### Network Support
-- Supports both MAINNET and TESTNET
-- Default network configurable in SDK constructor
-- Network can be overridden per API call
+- Supports both Stellar MAINNET and TESTNET networks
+- Network specified per operation call
+- Network-specific contract addresses handled by API
 
 ## Development Patterns
 
 ### Adding New API Methods
 1. Define TypeScript interfaces in appropriate `src/types/` file
-2. Add method to `SoroswapSDK` class
+2. Add method to `DefindexSDK` class with proper grouping (use comment sections)
 3. Use `this.httpClient` for HTTP calls
-4. Add unit tests with mocked responses
-5. Consider adding integration test if appropriate
+4. Follow existing patterns for network parameter handling
+5. Add unit tests with mocked responses
+6. Consider adding integration test if appropriate
 
 ### Type Safety
-- All API responses should have corresponding TypeScript interfaces
-- Use union types for different response formats (e.g., ExactIn vs ExactOut trades)
+- All API requests/responses should have corresponding TypeScript interfaces
 - Export all types from `src/types/index.ts`
+- Use proper union types for different response formats
+- Maintain consistency with API documentation
 
 ### Error Boundaries
-- HTTP errors are handled by HttpClient
-- Authentication errors are returned immediately (no retry logic needed)
-- Network timeouts should be handled gracefully
+- HTTP errors are handled by HttpClient and passed through as API responses
+- Authentication errors should be handled gracefully
+- Network timeouts should be configurable and well-documented
+
+### Vault Management Roles
+The SDK supports different operational roles:
+- **Vault Managers**: Can create and configure vaults
+- **Emergency Managers**: Can execute emergency rescues
+- **Strategy Managers**: Can pause/unpause individual strategies
+- **Regular Users**: Can deposit, withdraw, and view vault information
+
+## Migration Context
+
+This SDK is being migrated from a Soroswap-based implementation to DeFindex. Key differences:
+- Authentication supports both API keys (recommended) and email/password + JWT tokens
+- Vault-focused operations instead of DEX/trading operations
+- Factory pattern for vault creation
+- Administrative functions for vault management
+- Network parameter handling per operation instead of global configuration
