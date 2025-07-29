@@ -1,8 +1,6 @@
 import { DefindexSDK } from "../../src";
 import { 
   SupportedNetworks,
-  LoginParams,
-  ApiKeyGenerateRequest
 } from "../../src/types";
 
 /**
@@ -10,13 +8,8 @@ import {
  * These tests actually call the real DefIndex API and require valid credentials
  *
  * To run these tests:
- * Option 1 - API Key (recommended):
- *   1. Set environment variable: DEFINDEX_API_KEY
- *   2. Run: pnpm run test:integration
- *
- * Option 2 - Email/Password:
- *   1. Set environment variables: DEFINDEX_API_EMAIL, DEFINDEX_API_PASSWORD
- *   2. Run: pnpm run test:integration
+ *  1. Set environment variable: DEFINDEX_API_KEY
+ *  2. Run: pnpm run test:integration
  *
  * Note: These tests may fail if:
  * - API is down
@@ -31,8 +24,7 @@ describe("DefindexSDK - Integration Tests", () => {
 
   // Check for authentication credentials
   const hasApiKey = !!process.env.DEFINDEX_API_KEY;
-  const hasEmailPassword = !!(process.env.DEFINDEX_API_EMAIL && process.env.DEFINDEX_API_PASSWORD);
-  const skipTests = !hasApiKey && !hasEmailPassword;
+  const skipTests = !hasApiKey;
 
   beforeAll(async () => {
     if (skipTests) {
@@ -40,21 +32,12 @@ describe("DefindexSDK - Integration Tests", () => {
       return;
     }
 
-    // Initialize SDK with available authentication method
-    if (hasApiKey) {
-      sdk = new DefindexSDK({
-        apiKey: process.env.DEFINDEX_API_KEY!,
-        baseUrl: process.env.DEFINDEX_API_URL,
-        timeout: 30000,
-      });
-    } else {
-      sdk = new DefindexSDK({
-        email: process.env.DEFINDEX_API_EMAIL!,
-        password: process.env.DEFINDEX_API_PASSWORD!,
-        baseUrl: process.env.DEFINDEX_API_URL,
-        timeout: 30000,
-      });
-    }
+    // Initialize SDK with API key
+    sdk = new DefindexSDK({
+      apiKey: process.env.DEFINDEX_API_KEY!,
+      baseUrl: process.env.DEFINDEX_API_URL,
+      timeout: 30000,
+    });
   });
 
   describe("System Health", () => {
@@ -80,152 +63,6 @@ describe("DefindexSDK - Integration Tests", () => {
     }, 15000);
   });
 
-  describe("Authentication Flow", () => {
-    it("should authenticate with email/password when provided", async () => {
-      if (skipTests || !hasEmailPassword) return;
-
-      const loginCredentials: LoginParams = {
-        email: process.env.DEFINDEX_API_EMAIL!,
-        password: process.env.DEFINDEX_API_PASSWORD!
-      };
-
-      try {
-        const response = await sdk.login(loginCredentials);
-        console.log("🔐 Login response:", {
-          role: response.role,
-          username: response.username,
-          hasAccessToken: !!response.access_token,
-          hasRefreshToken: !!response.refresh_token
-        });
-
-        expect(response.access_token).toBeDefined();
-        expect(response.refresh_token).toBeDefined();
-        expect(response.role).toBeDefined();
-        expect(response.username).toBeDefined();
-
-        console.log("✅ Authentication successful");
-      } catch (error: any) {
-        console.error("❌ Authentication failed:", error.message);
-        throw error;
-      }
-    }, 15000);
-
-    it("should refresh authentication token", async () => {
-      if (skipTests || !hasEmailPassword) return;
-
-      try {
-        // First login to get tokens
-        await sdk.login({
-          email: process.env.DEFINDEX_API_EMAIL!,
-          password: process.env.DEFINDEX_API_PASSWORD!
-        });
-
-        // Then try to refresh
-        const refreshResponse = await sdk.refreshToken();
-        console.log("🔄 Token refresh response:", {
-          role: refreshResponse.role,
-          username: refreshResponse.username,
-          hasAccessToken: !!refreshResponse.access_token,
-          hasRefreshToken: !!refreshResponse.refresh_token
-        });
-
-        expect(refreshResponse.access_token).toBeDefined();
-        expect(refreshResponse.refresh_token).toBeDefined();
-
-        console.log("✅ Token refresh successful");
-      } catch (error: any) {
-        console.error("❌ Token refresh failed:", error.message);
-        // Don't throw as refresh might not be available in all environments
-        console.log("⚠️  Token refresh not available or failed");
-      }
-    }, 15000);
-  });
-
-  describe("API Key Management", () => {
-    it("should generate a new API key", async () => {
-      if (skipTests) return;
-
-      const keyRequest: ApiKeyGenerateRequest = {
-        name: `Test API Key ${Date.now()}`
-      };
-
-      try {
-        const apiKeyResponse = await sdk.generateApiKey(keyRequest);
-        console.log("🔑 Generated API key:", {
-          id: apiKeyResponse.id,
-          keyPrefix: apiKeyResponse.key.substring(0, 10) + "...",
-          keyLength: apiKeyResponse.key.length
-        });
-
-        expect(apiKeyResponse.id).toBeDefined();
-        expect(apiKeyResponse.key).toBeDefined();
-        expect(typeof apiKeyResponse.id).toBe('number');
-        expect(typeof apiKeyResponse.key).toBe('string');
-        expect(apiKeyResponse.key.length).toBeGreaterThan(20);
-
-        console.log("✅ API key generation successful");
-
-        // Store the key ID for potential cleanup
-        (global as any).testApiKeyId = apiKeyResponse.id;
-      } catch (error: any) {
-        console.error("❌ API key generation failed:", error.message);
-        throw error;
-      }
-    }, 15000);
-
-    it("should list user API keys", async () => {
-      if (skipTests) return;
-
-      try {
-        const apiKeys = await sdk.getUserApiKeys();
-        console.log("📋 User API keys:", apiKeys.map(key => ({
-          id: key.id,
-          name: key.name || 'Unnamed',
-          createdAt: key.createdAt,
-          lastUsedAt: key.lastUsedAt
-        })));
-
-        expect(Array.isArray(apiKeys)).toBe(true);
-
-        if (apiKeys.length > 0) {
-          const firstKey = apiKeys[0];
-          expect(firstKey.id).toBeDefined();
-          expect(firstKey.createdAt).toBeDefined();
-          expect(typeof firstKey.id).toBe('number');
-          expect(typeof firstKey.createdAt).toBe('string');
-        }
-
-        console.log("✅ API key listing successful");
-      } catch (error: any) {
-        console.error("❌ API key listing failed:", error.message);
-        throw error;
-      }
-    }, 15000);
-
-    it("should revoke an API key", async () => {
-      if (skipTests) return;
-
-      // Use the key ID from the previous generation test
-      const testKeyId = (global as any).testApiKeyId;
-      if (!testKeyId) {
-        console.log("⚠️  No test API key ID available for revocation test");
-        return;
-      }
-
-      try {
-        const revokeResponse = await sdk.revokeApiKey(testKeyId);
-        console.log("🗑️  API key revocation response:", revokeResponse);
-
-        expect(revokeResponse.success).toBe(true);
-
-        console.log("✅ API key revocation successful");
-      } catch (error: any) {
-        console.error("❌ API key revocation failed:", error.message);
-        // Don't throw as the key might already be revoked or not exist
-        console.log("⚠️  API key revocation test completed with error");
-      }
-    }, 15000);
-  });
 
   describe("Factory Operations", () => {
     it("should get factory address", async () => {
@@ -457,7 +294,6 @@ describe("DefindexSDK - Integration Tests", () => {
         const promises = [
           sdk.healthCheck(),
           sdk.getFactoryAddress(SupportedNetworks.TESTNET),
-          sdk.getUserApiKeys()
         ];
 
         const results = await Promise.allSettled(promises);

@@ -16,28 +16,18 @@ These tests actually call the real DefIndex API to verify end-to-end functionali
 
 You need valid DefIndex credentials to run integration tests. Choose one of the authentication methods:
 
-#### Option 1: API Key (Recommended)
-
+### Getting API Key
 1. Login to your DefIndex account
-2. Generate an API key via the SDK or web interface
-3. Use the API key for authentication
+2. Generate an API key via web interface
+3. Set the API key for authentication
 
-#### Option 2: Email/Password
-
-1. Use your existing DefIndex account credentials
-2. Ensure your account has the necessary permissions
 
 ### 2. Set Environment Variables
 
 Set the required environment variables based on your chosen authentication method:
 
 ```bash
-# Option 1: API Key Authentication (Recommended)
 export DEFINDEX_API_KEY="sk_your_api_key_here"
-
-# Option 2: Email/Password Authentication  
-export DEFINDEX_API_EMAIL="your-email@example.com"
-export DEFINDEX_API_PASSWORD="your-password"
 
 # Optional: Custom API URL (defaults to https://api.defindex.io)
 export DEFINDEX_API_URL="https://api.defindex.io"
@@ -49,9 +39,6 @@ export DEFINDEX_API_URL="https://api.defindex.io"
 # Create a .env file in the project root
 echo "DEFINDEX_API_KEY=sk_your_api_key_here" > .env
 
-# Or for email/password
-echo "DEFINDEX_API_EMAIL=your-email@example.com" > .env
-echo "DEFINDEX_API_PASSWORD=your-password" >> .env
 ```
 
 ## Running Tests
@@ -86,7 +73,6 @@ The integration tests are organized into categories:
 - **Never commit credentials** to version control
 - Integration tests use testnet by default for safety
 - Credentials are only used for authentication, not stored
-- API keys provide better security than email/password
 
 ### Test Environment
 - Tests use DefIndex testnet to avoid real money transactions
@@ -122,8 +108,6 @@ curl https://api.defindex.io/health
 
 # Check your environment variables
 echo $DEFINDEX_API_KEY
-echo $DEFINDEX_API_EMAIL
-echo $DEFINDEX_API_PASSWORD
 ```
 
 ## Example Test Run
@@ -140,13 +124,6 @@ $ pnpm run test:integration
   DefindexSDK - Integration Tests
     System Health
       ✓ should check API health status (1234ms)
-    Authentication Flow
-      ✓ should authenticate with email/password when provided (2345ms)
-      ✓ should refresh authentication token (1876ms)
-    API Key Management
-      ✓ should generate a new API key (3456ms)
-      ✓ should list user API keys (987ms)
-      ✓ should revoke an API key (1543ms)
     Factory Operations
       ✓ should get factory address (2109ms)
     Vault Operations

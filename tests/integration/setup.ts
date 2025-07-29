@@ -11,24 +11,16 @@ dotenv.config();
 jest.setTimeout(30000);
 
 // Check for required environment variables
-const requiredEnvVars = ['DEFINDEX_API_EMAIL', 'DEFINDEX_API_PASSWORD'];
-const optionalEnvVars = ['DEFINDEX_API_KEY']; // Alternative authentication
+const requiredEnvVars = ['DEFINDEX_API_KEY', 'DEFINDEX_BASE_URL']; // Alternative authentication
 const missingVars = requiredEnvVars.filter(varName => !process.env[varName]);
 
-// Allow running with either email/password OR API key
+// Allow running with API key
 const hasApiKey = process.env.DEFINDEX_API_KEY;
-const hasEmailPassword = process.env.DEFINDEX_API_EMAIL && process.env.DEFINDEX_API_PASSWORD;
 
-if (!hasApiKey && !hasEmailPassword) {
+if (!hasApiKey) {
   console.warn(`
 ⚠️  Integration tests require authentication credentials:
-
-Option 1 - API Key (recommended):
    - DEFINDEX_API_KEY
-
-Option 2 - Email/Password:
-   - DEFINDEX_API_EMAIL
-   - DEFINDEX_API_PASSWORD
 
 To run integration tests, set these variables and run:
    pnpm run test:integration
@@ -47,20 +39,17 @@ console.log = (...args: any[]) => {
 
 // Global test state
 beforeAll(async () => {
-  if (hasApiKey || hasEmailPassword) {
+  if (hasApiKey) {
     console.log('🚀 Starting integration tests against DefIndex API...');
     
     if (hasApiKey) {
       console.log(`🔑 Using API key: ${process.env.DEFINDEX_API_KEY?.substring(0, 10)}...`);
-    } else {
-      console.log(`📧 Using email: ${process.env.DEFINDEX_API_EMAIL}`);
-      console.log(`🔒 Password: [HIDDEN]`);
     }
   }
 });
 
 afterAll(async () => {
-  if (hasApiKey || hasEmailPassword) {
+  if (hasApiKey) {
     console.log('✅ Integration tests completed');
   }
 }); 
