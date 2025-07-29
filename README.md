@@ -4,60 +4,50 @@ Official TypeScript SDK for [DeFindex](https://defindex.io) - A decentralized va
 
 ## 🌟 Features
 
-- **🔐 JWT Authentication**: Secure email/password authentication with JWT tokens
+- **🔐 API Key Authentication**: Secure API key authentication with Bearer tokens (recommended)
 - **🏦 Vault Operations**: Create, deposit, withdraw, and manage decentralized vaults
 - **🏭 Factory Operations**: Deploy new vaults with custom configurations
-- **👑 Admin Operations**: Emergency rescue, strategy management for vault operators
+- **👑 Admin Operations**: Emergency rescue, strategy management for vault operators  
 - **📊 Real-time Data**: Vault balances, APY tracking, and comprehensive vault information
 - **🔒 Server-Side Focused**: Secure handling of credentials and sensitive operations
 - **📝 TypeScript Support**: Full type safety with comprehensive interfaces
 - **⚡ Lightweight**: Simple authentication and comprehensive error handling
 - **🧪 Well Tested**: Comprehensive unit and integration test coverage
+- **📚 Complete Examples**: Functional TypeScript examples and comprehensive documentation
 
 ## 🚀 Installation
 
 ```bash
-npm install defindex-sdk
+npm install @defindex/sdk
 ```
 
 ## 📖 Quick Start
 
 ```typescript
-import { DefindexSDK, SupportedNetworks } from 'defindex-sdk';
+import { DefindexSDK, SupportedNetworks } from '@defindex/sdk';
 
-// Initialize with API key (recommended)
+// Initialize with API key
 const sdk = new DefindexSDK({
   apiKey: 'sk_your_api_key_here',
   baseUrl: 'https://api.defindex.io'
 });
 
-// Or initialize with automatic login
-const sdk = new DefindexSDK({
-  email: 'your-email@example.com',
-  password: 'your-secure-password',
-  baseUrl: 'https://api.defindex.io'
-});
+// Check API health
+const health = await sdk.healthCheck();
+console.log('API Status:', health.status.reachable);
 
-// Or initialize without authentication and set API key later
-const sdk = new DefindexSDK({
-  baseUrl: 'https://api.defindex.io'
-});
-sdk.setApiKey('sk_your_api_key_here');
-
-// Manual login (alternative to API key)
-await sdk.login({
-  email: 'your-email@example.com',
-  password: 'your-secure-password'
-});
+// Get factory address
+const factory = await sdk.getFactoryAddress(SupportedNetworks.TESTNET);
+console.log('Factory Address:', factory.address);
 
 // Get vault information
-const vaultAddress = 'GVAULT_CONTRACT_ADDRESS...';
+const vaultAddress = 'CVAULT_CONTRACT_ADDRESS...';
 const vaultInfo = await sdk.getVaultInfo(vaultAddress, SupportedNetworks.TESTNET);
 console.log(`Vault: ${vaultInfo.name} (${vaultInfo.symbol})`);
 
 // Deposit to vault
 const depositResponse = await sdk.depositToVault(vaultAddress, {
-  amounts: [1000000, 2000000], // Amounts for each asset
+  amounts: [1000000], // Amount for each asset (considering decimals)
   caller: 'GUSER_ADDRESS...',
   invest: true,
   slippageBps: 100 // 1% slippage tolerance
@@ -68,6 +58,32 @@ const signedXdr = await yourWallet.sign(depositResponse.xdr);
 const result = await sdk.sendTransaction(signedXdr, SupportedNetworks.TESTNET, false);
 ```
 
+## 🚀 Running the Example
+
+The SDK includes a comprehensive functional example:
+
+```bash
+# Install dependencies
+pnpm install
+
+# Copy environment configuration
+cp .env.example .env
+
+# Edit .env with your credentials
+# DEFINDEX_API_KEY=sk_your_api_key_here
+
+# Run the example
+pnpm run example
+```
+
+The example demonstrates:
+- SDK initialization and authentication
+- API health checking
+- Factory operations
+- Vault creation, deposits, and withdrawals
+- Administrative vault management
+- Error handling and best practices
+
 ## 🔧 Configuration
 
 ### SDK Configuration Options
@@ -75,8 +91,6 @@ const result = await sdk.sendTransaction(signedXdr, SupportedNetworks.TESTNET, f
 ```typescript
 interface DefindexSDKConfig {
   apiKey?: string;         // API key for authentication (recommended)
-  email?: string;          // Email for automatic login (alternative to API key)
-  password?: string;       // Password for automatic login (alternative to API key)
   baseUrl?: string;        // Custom API base URL (defaults to 'https://api.defindex.io')
   timeout?: number;        // Request timeout in ms (defaults to 30000)
 }
@@ -92,60 +106,38 @@ const sdk = new DefindexSDK({
   apiKey: process.env.DEFINDEX_API_KEY,
   baseUrl: process.env.DEFINDEX_API_URL || 'https://api.defindex.io'
 });
-
-// Using email/password (alternative)
-const sdk = new DefindexSDK({
-  email: process.env.DEFINDEX_EMAIL,
-  password: process.env.DEFINDEX_PASSWORD,
-  baseUrl: process.env.DEFINDEX_API_URL || 'https://api.defindex.io'
-});
 ```
+
+## ✅ Current Status
+
+**Great News!** The DeFindex API is now fully operational on testnet:
+
+- ✅ **Health Check**: Working correctly
+- ✅ **SDK Authentication**: API key authentication implemented
+- ✅ **Factory Operations**: Factory deployed and working on testnet
+- ✅ **Vault Creation**: Create vaults with custom configurations
+- ✅ **Vault Operations**: Full deposit, withdrawal, and balance operations
+- ✅ **Vault Management**: Administrative operations (pause/unpause strategies, emergency rescue)
+- ✅ **Transaction Building**: All operations return signed XDR for wallet integration
+- ⚠️ **APY Calculation**: Working but some fields may be undefined for new vaults
+
+### Recent Updates
+
+1. ✅ **Factory Deployed**: Factory contract now available on testnet
+2. ✅ **Full Vault Operations**: Create, manage, and interact with vaults
+3. ✅ **Complete Example**: Run `pnpm run example` to see all functionality
+4. ✅ **Ready for Production**: All core functionality is operational
 
 ## 📚 API Reference
 
-### Authentication
+### System Operations
 
-#### User Registration
+#### Health Check
 ```typescript
-await sdk.register({
-  email: 'newuser@example.com',
-  password: 'securePassword123!',
-  username: 'johndoe'
-});
-```
-
-#### User Login
-```typescript
-const response = await sdk.login({
-  email: 'user@example.com',
-  password: 'securePassword123!'
-});
-console.log('Access token:', response.access_token);
-```
-
-#### Token Refresh
-```typescript
-const response = await sdk.refreshToken();
-```
-
-### API Key Management
-
-#### Generate API Key
-```typescript
-const apiKey = await sdk.generateApiKey({
-  name: 'Production API Key'
-});
-console.log('API Key:', apiKey.key);
-```
-
-#### List User API Keys
-```typescript
-const apiKeys = await sdk.getUserApiKeys();
-```
-
-#### Revoke API Key
-```typescript
-await sdk.revokeApiKey(keyId);
+const health = await sdk.healthCheck();
+if (health.status.reachable) {
+  console.log('API is healthy');
+}
 ```
 
 ### Factory Operations
@@ -158,19 +150,19 @@ console.log('Factory address:', factory.address);
 
 #### Create Vault
 ```typescript
-const vaultConfig = {
+const vaultConfig: CreateDefindexVault = {
   roles: {
-    0: "GEMERGENCY_MANAGER_ADDRESS...",
-    1: "GFEE_RECEIVER_ADDRESS...",
-    2: "GVAULT_MANAGER_ADDRESS...",
-    3: "GREBALANCE_MANAGER_ADDRESS..."
+    0: "GEMERGENCY_MANAGER_ADDRESS...",  // Emergency Manager
+    1: "GFEE_RECEIVER_ADDRESS...",       // Fee Receiver
+    2: "GVAULT_MANAGER_ADDRESS...",      // Vault Manager
+    3: "GREBALANCE_MANAGER_ADDRESS..."   // Rebalance Manager
   },
   vault_fee_bps: 100, // 1% fee
   assets: [{
-    address: "CUSDC_CONTRACT_ADDRESS...",
+    address: "CXLM_CONTRACT_ADDRESS...",
     strategies: [{
       address: "GSTRATEGY_CONTRACT_ADDRESS...",
-      name: "USDC Lending Strategy",
+      name: "XLM Strategy",
       paused: false
     }]
   }],
@@ -183,6 +175,7 @@ const vaultConfig = {
 };
 
 const response = await sdk.createVault(vaultConfig, SupportedNetworks.TESTNET);
+console.log('Vault XDR:', response.xdr);
 ```
 
 ### Vault Operations
@@ -336,13 +329,6 @@ pnpm run test:coverage
 
 # Watch mode
 pnpm run test:watch
-```
-
-#### Integration Tests (Real API)
-```bash
-# Set up credentials first
-export DEFINDEX_API_EMAIL="your_email@example.com"
-export DEFINDEX_API_PASSWORD="your_password"
 
 # Run integration tests
 pnpm run test:integration
@@ -366,8 +352,6 @@ import {
   DefindexSDK,
   DefindexSDKConfig,
   SupportedNetworks,
-  LoginParams,
-  RegisterParams,
   CreateDefindexVault,
   DepositToVaultParams,
   WithdrawFromVaultParams,
@@ -384,26 +368,11 @@ import {
 While server-side focused, you can create secure frontend integrations:
 
 ```typescript
-// Backend API endpoint using API key (recommended)
+// Backend API endpoint using API key
 app.post('/api/vault-info', async (req, res) => {
   try {
     const sdk = new DefindexSDK({
       apiKey: process.env.DEFINDEX_API_KEY
-    });
-    
-    const vaultInfo = await sdk.getVaultInfo(req.body.vaultAddress, req.body.network);
-    res.json(vaultInfo);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
-
-// Alternative: Backend API endpoint using email/password
-app.post('/api/vault-info-alt', async (req, res) => {
-  try {
-    const sdk = new DefindexSDK({
-      email: process.env.DEFINDEX_EMAIL,
-      password: process.env.DEFINDEX_PASSWORD
     });
     
     const vaultInfo = await sdk.getVaultInfo(req.body.vaultAddress, req.body.network);
@@ -417,7 +386,10 @@ app.post('/api/vault-info-alt', async (req, res) => {
 ## 📖 Documentation
 
 For comprehensive examples and detailed API documentation, see:
-- [EXAMPLES.md](./EXAMPLES.md) - Comprehensive usage examples
+- [examples/basic-example.ts](./examples/basic-example.ts) - Complete functional example
+- [EXAMPLES.md](./EXAMPLES.md) - Comprehensive usage examples  
+- [docs/defindex-sdk-docs.md](./docs/defindex-sdk-docs.md) - Complete SDK documentation
+- [CLAUDE.md](./CLAUDE.md) - Development guidance and architecture notes
 - [API Documentation](https://api.defindex.io) - Complete API reference
 
 ## 🔗 Links

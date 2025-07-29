@@ -5,189 +5,83 @@ This document provides comprehensive examples for using the DeFindex SDK.
 ## Installation
 
 ```bash
-npm install defindex-sdk
+npm install @defindex/sdk
 ```
+
+## ✅ Current Status
+
+**Excellent News!** The DeFindex API is now fully operational:
+
+- ✅ **Health Check**: Working perfectly
+- ✅ **SDK Authentication**: API key authentication working
+- ✅ **Factory Operations**: Factory deployed and working on testnet
+- ✅ **Vault Creation**: Full vault creation with XDR generation
+- ✅ **Vault Operations**: Deposits, withdrawals, balance queries all working
+- ✅ **Administrative Operations**: Strategy management and emergency rescue working
 
 ## Basic Setup
 
 ```typescript
-import { DefindexSDK, SupportedNetworks } from 'defindex-sdk';
+import { DefindexSDK, SupportedNetworks } from '@defindex/sdk';
 
-// With API key (recommended)
+// Initialize with API key (recommended)
 const sdk = new DefindexSDK({
   apiKey: 'sk_your_api_key_here',
   baseUrl: 'https://api.defindex.io',
   timeout: 30000
 });
 
-// Basic initialization without authentication
-const sdk = new DefindexSDK({
-  baseUrl: 'https://api.defindex.io',
-  timeout: 30000
-});
-
-// Set API key after initialization
-sdk.setApiKey('sk_your_api_key_here');
-
-// With automatic login (alternative to API key)
-const sdk = new DefindexSDK({
-  email: 'user@example.com',
-  password: 'securePassword123',
-  baseUrl: 'https://api.defindex.io'
-});
-```
-
-## Authentication Examples
-
-### API Key Authentication
-
-```typescript
-import { DefindexSDK } from 'defindex-sdk';
-
-// Method 1: Initialize with API key
-const sdk = new DefindexSDK({
-  apiKey: 'sk_your_api_key_here',
-  baseUrl: 'https://api.defindex.io'
-});
-
-// Method 2: Set API key after initialization
-const sdk = new DefindexSDK({
-  baseUrl: 'https://api.defindex.io'
-});
-sdk.setApiKey('sk_your_api_key_here');
-
-// Now you can use all SDK methods without additional authentication
+// Check if API is healthy
 const health = await sdk.healthCheck();
 console.log('API is ready:', health.status.reachable);
 ```
 
-### User Registration
+## Running the Complete Example
 
-```typescript
-import { DefindexSDK, RegisterParams } from 'defindex-sdk';
+For a comprehensive, working example, use the included example script:
 
-const sdk = new DefindexSDK({
-  baseUrl: 'https://api.defindex.io'
-});
+```bash
+# Copy and configure environment
+cp .env.example .env
+# Edit .env with your API key
 
-const registerData: RegisterParams = {
-  email: 'newuser@example.com',
-  password: 'securePassword123!',
-  username: 'johndoe'
-};
-
-try {
-  const response = await sdk.register(registerData);
-  console.log(response.message); // "User johndoe registered"
-} catch (error) {
-  console.error('Registration failed:', error.message);
-}
+# Run the complete example
+pnpm run example
 ```
 
-### User Login
+## API Operations
 
-```typescript
-import { DefindexSDK, LoginParams } from 'defindex-sdk';
-
-const loginData: LoginParams = {
-  email: 'user@example.com',
-  password: 'securePassword123!'
-};
-
-try {
-  const response = await sdk.login(loginData);
-  console.log('Login successful!');
-  console.log('Access token:', response.access_token);
-  console.log('User role:', response.role);
-} catch (error) {
-  console.error('Login failed:', error.message);
-}
-```
-
-### Token Refresh
+### Health Check (✅ Working)
 
 ```typescript
 try {
-  const response = await sdk.refreshToken();
-  console.log('Token refreshed successfully');
-  console.log('New access token:', response.access_token);
+  const health = await sdk.healthCheck();
+  console.log('API Status:', health.status.reachable);
 } catch (error) {
-  console.error('Token refresh failed:', error.message);
+  console.error('Health check failed:', error.message);
 }
 ```
 
-## API Key Management
+### Factory Operations (✅ Working)
 
-### Generate API Key
-
-```typescript
-import { ApiKeyGenerateRequest } from 'defindex-sdk';
-
-const keyRequest: ApiKeyGenerateRequest = {
-  name: 'Production API Key'
-};
-
-try {
-  const apiKey = await sdk.generateApiKey(keyRequest);
-  console.log('API Key created!');
-  console.log('Key ID:', apiKey.id);
-  console.log('API Key:', apiKey.key);
-  
-  // Store the key securely - you won't be able to retrieve it again
-} catch (error) {
-  console.error('API key generation failed:', error.message);
-}
-```
-
-### List User API Keys
-
-```typescript
-try {
-  const apiKeys = await sdk.getUserApiKeys();
-  
-  console.log(`You have ${apiKeys.length} API keys:`);
-  apiKeys.forEach(key => {
-    console.log(`- ID: ${key.id}, Name: ${key.name || 'Unnamed'}`);
-    console.log(`  Created: ${key.createdAt}`);
-    console.log(`  Last used: ${key.lastUsedAt || 'Never'}`);
-  });
-} catch (error) {
-  console.error('Failed to fetch API keys:', error.message);
-}
-```
-
-### Revoke API Key
-
-```typescript
-const keyIdToRevoke = 123;
-
-try {
-  const response = await sdk.revokeApiKey(keyIdToRevoke);
-  if (response.success) {
-    console.log('API key revoked successfully');
-  }
-} catch (error) {
-  console.error('Failed to revoke API key:', error.message);
-}
-```
-
-## Factory Operations
-
-### Get Factory Address
+The factory is now deployed and fully operational on testnet!
 
 ```typescript
 try {
   const factory = await sdk.getFactoryAddress(SupportedNetworks.TESTNET);
   console.log('Factory address:', factory.address);
+  // Returns: CCJDRCK7VBZV6KEJ433F2KXNELEGAAXYMQWFG6JGLVYATJ4SDEYLRWMD
 } catch (error) {
   console.error('Failed to get factory address:', error.message);
 }
 ```
 
-### Create a Vault
+### Create a Vault (✅ Working)
+
+Vault creation is now fully functional! The factory generates proper XDR for signing.
 
 ```typescript
-import { CreateDefindexVault, SupportedNetworks } from 'defindex-sdk';
+import { CreateDefindexVault, SupportedNetworks } from '@defindex/sdk';
 
 const vaultConfig: CreateDefindexVault = {
   roles: {
@@ -196,12 +90,12 @@ const vaultConfig: CreateDefindexVault = {
     2: "GVAULT_MANAGER_ADDRESS...",     // Vault Manager
     3: "GREBALANCE_MANAGER_ADDRESS..."  // Rebalance Manager
   },
-  vault_fee_bps: 100, // 1% fee
+  vault_fee_bps: 100, // 1% fee (1% = 100 basis points)
   assets: [{
-    address: "CUSDC_CONTRACT_ADDRESS...",
+    address: "CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC", // XLM asset
     strategies: [{
-      address: "GSTRATEGY_CONTRACT_ADDRESS...",
-      name: "USDC Lending Strategy",
+      address: "CBO77JLVAT54YBRHBY4PSITLILWAAXX5JHPXGBFRW2XUFQKXZ3ZLJ7MJ", // Strategy contract
+      name: "XLM Strategy",
       paused: false
     }]
   }],
@@ -215,63 +109,125 @@ const vaultConfig: CreateDefindexVault = {
 
 try {
   const response = await sdk.createVault(vaultConfig, SupportedNetworks.TESTNET);
-  console.log('Vault creation XDR:', response.xdr);
-  console.log('Simulation result:', response.simulation_result);
+  console.log('✅ Vault created successfully!');
+  console.log('XDR to sign:', response.xdr);
+  console.log('Simulation result:', response.simulation_result); // "SUCCESS"
   
-  // Sign the XDR with your wallet and submit it
+  // Sign the XDR with your wallet and submit using sendTransaction()
+  // const result = await sdk.sendTransaction(signedXDR, SupportedNetworks.TESTNET);
 } catch (error) {
   console.error('Vault creation failed:', error.message);
 }
 ```
 
-### Create Vault with Initial Deposit
-
-```typescript
-import { CreateDefindexVaultDepositDto } from 'defindex-sdk';
-
-const vaultWithDepositConfig: CreateDefindexVaultDepositDto = {
-  // ... all the vault config from above
-  ...vaultConfig,
-  deposit_amounts: [1000000, 2000000] // Initial deposit amounts
-};
-
-try {
-  const response = await sdk.createVaultWithDeposit(
-    vaultWithDepositConfig, 
-    SupportedNetworks.TESTNET
-  );
-  
-  console.log('Vault creation + deposit XDR:', response.xdr);
-} catch (error) {
-  console.error('Vault creation with deposit failed:', error.message);
-}
-```
-
-## Vault Operations
+## Vault Operations (✅ All Working)
 
 ### Get Vault Information
 
 ```typescript
-const vaultAddress = 'GVAULT_CONTRACT_ADDRESS...';
+const vaultAddress = 'CAEJL2XKGLSWCPKSVVRYAWLQKE4DS24YCZX53CLUMWGOVEOERSAZH5UM';
 
 try {
   const vaultInfo = await sdk.getVaultInfo(vaultAddress, SupportedNetworks.TESTNET);
   
   console.log(`Vault: ${vaultInfo.name} (${vaultInfo.symbol})`);
-  console.log(`Total Supply: ${vaultInfo.totalSupply}`);
-  console.log(`Total Assets: ${vaultInfo.totalAssets}`);
-  console.log(`Vault Fee: ${vaultInfo.feesBps.vaultFee / 100}%`);
-  console.log(`DeFindex Fee: ${vaultInfo.feesBps.defindexFee / 100}%`);
+  console.log(`Vault Fee: ${vaultInfo.feesBps.vaultFee / 100}%`); // 1%
+  console.log(`DeFindex Fee: ${vaultInfo.feesBps.defindexFee / 100}%`); // 20%
   
-  console.log('Assets:');
-  vaultInfo.assets.forEach(asset => {
-    console.log(`- ${asset.name} (${asset.symbol}): ${asset.address}`);
-    asset.strategies.forEach(strategy => {
+  // Show assets and strategies
+  vaultInfo.assets.forEach((asset, index) => {
+    console.log(`Asset ${index + 1}: ${asset.address}`);
+    asset.strategies.forEach((strategy, idx) => {
       console.log(`  Strategy: ${strategy.name} - ${strategy.paused ? 'PAUSED' : 'ACTIVE'}`);
     });
   });
 } catch (error) {
   console.error('Failed to get vault info:', error.message);
+}
+```
+
+### Get User Balance
+
+```typescript
+const userAddress = 'GUSER_ADDRESS...';
+
+try {
+  const balance = await sdk.getVaultBalance(vaultAddress, userAddress, SupportedNetworks.TESTNET);
+  
+  console.log(`Vault Shares: ${balance.dfTokens}`); // e.g., 1999000
+  console.log(`Underlying Value: ${balance.underlyingBalance}`); // ['1999000']
+} catch (error) {
+  console.error('Failed to get balance:', error.message);
+}
+```
+
+### Deposit to Vault
+
+```typescript
+import { DepositToVaultParams } from '@defindex/sdk';
+
+const depositData: DepositToVaultParams = {
+  amounts: [1000000], // 1 XLM (7 decimals)
+  caller: 'GUSER_ADDRESS...',
+  invest: true, // Auto-invest after deposit
+  slippageBps: 100 // 1% slippage tolerance
+};
+
+try {
+  const response = await sdk.depositToVault(vaultAddress, depositData, SupportedNetworks.TESTNET);
+  
+  console.log('✅ Deposit prepared successfully!');
+  console.log('XDR to sign:', response.xdr);
+  console.log('Shares to mint:', response.simulationResponse.sharesToMint); // e.g., "1000000"
+  
+  // Sign with wallet and submit
+  // const result = await sdk.sendTransaction(signedXDR, SupportedNetworks.TESTNET);
+} catch (error) {
+  console.error('Deposit failed:', error.message);
+}
+```
+
+### Withdraw from Vault (by Amount)
+
+```typescript
+import { WithdrawFromVaultParams } from '@defindex/sdk';
+
+const withdrawData: WithdrawFromVaultParams = {
+  amounts: [500000], // 0.5 XLM
+  caller: 'GUSER_ADDRESS...',
+  slippageBps: 100 // 1% slippage tolerance
+};
+
+try {
+  const response = await sdk.withdrawFromVault(vaultAddress, withdrawData, SupportedNetworks.TESTNET);
+  
+  console.log('✅ Withdrawal prepared successfully!');
+  console.log('XDR to sign:', response.xdr);
+  console.log('Withdrawn amounts:', response.simulationResponse.withdrawn_amounts); // ["500000"]
+} catch (error) {
+  console.error('Withdrawal failed:', error.message);
+}
+```
+
+### Withdraw from Vault (by Shares)
+
+```typescript
+import { WithdrawSharesParams } from '@defindex/sdk';
+
+const shareData: WithdrawSharesParams = {
+  shares: 1000000, // Number of vault shares to burn
+  caller: 'GUSER_ADDRESS...',
+  slippageBps: 100 // 1% slippage tolerance
+};
+
+try {
+  const response = await sdk.withdrawShares(vaultAddress, shareData, SupportedNetworks.TESTNET);
+  
+  console.log('✅ Share withdrawal prepared successfully!');
+  console.log('XDR to sign:', response.xdr);
+  console.log('Withdrawn amounts:', response.simulationResponse.withdrawn_amounts); // ["1000000"]
+} catch (error) {
+  console.error('Share withdrawal failed:', error.message);
 }
 ```
 
@@ -571,7 +527,7 @@ try {
 } catch (error) {
   if (isAuthError(error)) {
     console.error('Authentication error:', error.message);
-    // Maybe redirect to login
+    // Check API key configuration
   } else if (isValidationError(error)) {
     console.error('Validation error:', error.message);
     if (error.details) {
@@ -620,11 +576,11 @@ try {
 
 ```typescript
 // ❌ Bad
-const response = await sdk.login(credentials);
+const response = await sdk.getVaultInfo(vaultAddress, network);
 
 // ✅ Good
 try {
-  const response = await sdk.login(credentials);
+  const response = await sdk.getVaultInfo(vaultAddress, network);
   // Handle success
 } catch (error) {
   // Handle error appropriately
@@ -669,20 +625,11 @@ const depositData: DepositToVaultParams = {
 // ❌ Bad - Don't hardcode credentials
 const sdk = new DefindexSDK({
   apiKey: 'sk_hardcoded_key_here',
-  email: 'user@example.com',
-  password: 'password123'
 });
 
 // ✅ Good - Use environment variables (API key recommended)
 const sdk = new DefindexSDK({
   apiKey: process.env.DEFINDEX_API_KEY,
-  baseUrl: process.env.DEFINDEX_API_URL || 'https://api.defindex.io'
-});
-
-// ✅ Alternative - Use environment variables for email/password
-const sdk = new DefindexSDK({
-  email: process.env.DEFINDEX_EMAIL,
-  password: process.env.DEFINDEX_PASSWORD,
   baseUrl: process.env.DEFINDEX_API_URL || 'https://api.defindex.io'
 });
 ```
