@@ -25,12 +25,7 @@ import {
  * Configuration options for the DeFindex SDK
  */
 export interface DefindexSDKConfig {
-  /** API key for authentication (alternative to email/password) */
   apiKey?: string;
-  /** User email for automatic login (optional) */
-  email?: string;
-  /** User password for automatic login (optional) */
-  password?: string;
   /** Custom API base URL (defaults to 'https://api.defindex.io') */
   baseUrl?: string;
   /** Request timeout in milliseconds (defaults to 30000) */
@@ -52,16 +47,6 @@ export interface DefindexSDKConfig {
  *   apiKey: 'sk_your_api_key_here',
  *   baseUrl: 'https://api.defindex.io'
  * });
- * 
- * // With automatic login
- * const sdk = new DefindexSDK({
- *   email: 'user@example.com',
- *   password: 'password123',
- *   timeout: 60000
- * });
- * 
- * // Manual login
- * await sdk.login({ email: 'user@example.com', password: 'password123' });
  * ```
  */
 export class DefindexSDK {
