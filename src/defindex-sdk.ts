@@ -1,21 +1,12 @@
 import { HttpClient } from './clients/http-client';
 import {
-  ApiKeyGenerateRequest,
-  ApiKeyGenerateResponse,
-  ApiKeyRevokeResponse,
-  AuthLoginResponse,
-  AuthRefreshResponse,
   CreateDefindexVault,
   CreateDefindexVaultDepositDto,
   CreateVaultDepositResponse,
   CreateVaultResponse,
   DepositToVaultParams,
   FactoryAddressResponse,
-  GetUserApiKeysResponse,
-  LoginParams,
   PauseStrategyParams,
-  RegisterParams,
-  RegisterResponse as AuthRegisterResponse,
   RescueFromVaultParams,
   StellarSendTransactionResponse,
   SupportedNetworks,
@@ -88,123 +79,6 @@ export class DefindexSDK {
       config.apiKey || '', // API key or empty string
       config.timeout || 30000
     );
-
-    // If email and password are provided, log in automatically
-    if (this.config.email && this.config.password) {
-      this.login({ email: this.config.email, password: this.config.password });
-    }
-  }
-
-  //=======================================================================
-  // Authentication Operations
-  //=======================================================================
-
-  /**
-   * Set API key for authentication
-   * @param apiKey - The API key to use for authentication
-   * @example
-   * ```typescript
-   * const sdk = new DefindexSDK({ baseUrl: 'https://api.defindex.io' });
-   * sdk.setApiKey('sk_your_api_key_here');
-   * ```
-   */
-  public setApiKey(apiKey: string): void {
-    this.httpClient.setApiKey(apiKey);
-  }
-
-  /**
-   * Authenticate user with email and password
-   * @param credentials - User login credentials (email and password)
-   * @returns Authentication response with access token and user info
-   * @example
-   * ```typescript
-   * const response = await sdk.login({
-   *   email: 'user@example.com',
-   *   password: 'securePassword123'
-   * });
-   * console.log('Access token:', response.access_token);
-   * ```
-   */
-  public async login(credentials: LoginParams): Promise<AuthLoginResponse> {
-    const response = await this.httpClient.post<AuthLoginResponse>('/login', credentials);
-    if (response.access_token) {
-      this.httpClient.setAuthorizationHeader(`Bearer ${response.access_token}`);
-    }
-    return response;
-  }
-
-  /**
-   * Register a new user account
-   * @param userData - User registration data (email, password, username)
-   * @returns Registration confirmation message
-   * @example
-   * ```typescript
-   * const response = await sdk.register({
-   *   email: 'newuser@example.com',
-   *   password: 'securePassword123',
-   *   username: 'newuser'
-   * });
-   * console.log(response.message); // "User newuser registered"
-   * ```
-   */
-  public async register(userData: RegisterParams): Promise<AuthRegisterResponse> {
-    return this.httpClient.post<AuthRegisterResponse>('/register', userData);
-  }
-
-  /**
-   * Refresh expired access token using refresh token
-   * @returns New authentication tokens
-   * @example
-   * ```typescript
-   * const response = await sdk.refreshToken();
-   * console.log('New access token:', response.access_token);
-   * ```
-   */
-  public async refreshToken(): Promise<AuthRefreshResponse> {
-    // Assuming the API has a /refresh endpoint that takes a refresh token
-    // The HttpClient should be configured to handle sending the refresh token
-    const response = await this.httpClient.post<AuthRefreshResponse>('/refresh', {});
-    if (response.access_token) {
-      this.httpClient.setAuthorizationHeader(`Bearer ${response.access_token}`);
-    }
-    return response;
-  }
-
-  //=======================================================================
-  // API Key Management
-  //=======================================================================
-
-  /**
-   * Generate a new API key for the authenticated user
-   * @param request - Optional API key generation parameters (name)
-   * @returns API key information including the key and ID
-   */
-  public async generateApiKey(request?: ApiKeyGenerateRequest): Promise<ApiKeyGenerateResponse> {
-    return this.httpClient.post<ApiKeyGenerateResponse>('/api-keys/generate', request || {});
-  }
-
-  /**
-   * Get all API keys for the authenticated user
-   * @returns Array of user's API keys with metadata
-   * @example
-   * ```typescript
-   * const apiKeys = await sdk.getUserApiKeys();
-   * apiKeys.forEach(key => {
-   *   console.log(`Key ID: ${key.id}, Name: ${key.name}, Created: ${key.createdAt}`);
-   * });
-   * ```
-   */
-  public async getUserApiKeys(): Promise<GetUserApiKeysResponse> {
-    return this.httpClient.get<GetUserApiKeysResponse>('/api-keys');
-  }
-
-  /**
-   * Revoke an existing API key
-   * @param keyId - The ID of the API key to revoke
-   * @returns Success status of the revocation
-   */
-  public async revokeApiKey(keyId: number): Promise<ApiKeyRevokeResponse> {
-    return this.httpClient.post<ApiKeyRevokeResponse>(`/api-keys/${keyId}/revoke`, { keyId });
   }
 
   //=======================================================================

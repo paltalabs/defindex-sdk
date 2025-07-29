@@ -1,7 +1,5 @@
 import { DefindexSDK } from '../src';
 import {
-  LoginParams,
-  RegisterParams,
   SupportedNetworks,
   CreateDefindexVault,
   CreateDefindexVaultDepositDto,
@@ -49,64 +47,6 @@ describe('DefindexSDK - Unit Tests', () => {
     mockHttpClient = (sdk as any).httpClient;
   });
 
-  describe('Authentication', () => {
-    it('should initialize with API key', () => {
-      const apiKey = 'sk_test_api_key_123';
-      const sdkWithApiKey = new DefindexSDK({
-        baseUrl: 'https://api.defindex.io',
-        apiKey: apiKey
-      });
-
-      // Check that HttpClient constructor was called with the API key
-      expect(require('../src/clients/http-client').HttpClient).toHaveBeenCalledWith(
-        'https://api.defindex.io',
-        apiKey,
-        30000
-      );
-    });
-
-    it('should set API key after initialization', () => {
-      const apiKey = 'sk_new_api_key_456';
-      
-      sdk.setApiKey(apiKey);
-
-      expect(mockHttpClient.setApiKey).toHaveBeenCalledWith(apiKey);
-    });
-
-    it('should login and set authorization header', async () => {
-      const loginCredentials: LoginParams = { email: 'test@example.com', password: 'password123' };
-      const mockResponse = { access_token: 'fake_jwt_token', refresh_token: 'fake_refresh_token' };
-      mockHttpClient.post.mockResolvedValue(mockResponse);
-
-      const result = await sdk.login(loginCredentials);
-
-      expect(result).toEqual(mockResponse);
-      expect(mockHttpClient.post).toHaveBeenCalledWith('/login', loginCredentials);
-      expect(mockHttpClient.setAuthorizationHeader).toHaveBeenCalledWith(`Bearer ${mockResponse.access_token}`);
-    });
-
-    it('should register a new user', async () => {
-      const registerData: RegisterParams = { email: 'new@example.com', password: 'newpass', username: 'newuser' };
-      const mockResponse = { message: 'User registered successfully' };
-      mockHttpClient.post.mockResolvedValue(mockResponse);
-
-      const result = await sdk.register(registerData);
-
-      expect(result).toEqual(mockResponse);
-      expect(mockHttpClient.post).toHaveBeenCalledWith('/register', registerData);
-    });
-
-    it('should refresh token and update authorization header', async () => {
-      const mockResponse = { access_token: 'new_jwt_token', refresh_token: 'new_refresh_token' };
-      mockHttpClient.post.mockResolvedValue(mockResponse);
-
-      const result = await sdk.refreshToken();
-
-      expect(result).toEqual(mockResponse);
-      expect(mockHttpClient.post).toHaveBeenCalledWith('/refresh', {});
-      expect(mockHttpClient.setAuthorizationHeader).toHaveBeenCalledWith(`Bearer ${mockResponse.access_token}`);
-    });
-  });
 
   describe('System', () => {
     it('should perform a health check', async () => {

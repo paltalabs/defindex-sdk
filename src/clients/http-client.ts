@@ -67,20 +67,6 @@ export class HttpClient {
   }
 
   /**
-   * Set Authorization header
-   */
-  setAuthorizationHeader(token: string): void {
-    this.client.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-  }
-
-  /**
-   * Set API key for authentication
-   */
-  setApiKey(apiKey: string): void {
-    this.client.defaults.headers.common['Authorization'] = `Bearer ${apiKey}`;
-  }
-
-  /**
    * Build URL with query parameters
    */
   buildUrlWithQuery(baseUrl: string, params: Record<string, any>): string {

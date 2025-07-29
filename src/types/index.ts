@@ -1,5 +1,4 @@
 /* Export all type definitions */
-export * from './auth.types';
 export * from './base.types';
 export * from './error.types';
 export * from './factory.types';

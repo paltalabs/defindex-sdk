@@ -225,31 +225,4 @@ describe('HttpClient', () => {
     });
   });
 
-  describe('API key authentication', () => {
-    it('should include API key in Authorization header', () => {
-      const createCall = mockedAxios.create.mock.calls[0]?.[0];
-      expect((createCall?.headers as any)?.['Authorization']).toBe('Bearer sk_test_api_key_123');
-    });
-
-    it('should work with different API key formats', () => {
-      jest.clearAllMocks();
-      
-      new HttpClient(
-        'https://api.example.com',
-        'sk_live_another_key_456',
-        30000
-      );
-
-      const createCall = mockedAxios.create.mock.calls[0]?.[0];
-      expect((createCall?.headers as any)?.['Authorization']).toBe('Bearer sk_live_another_key_456');
-    });
-
-    it('should update API key after initialization', () => {
-      const newApiKey = 'sk_new_key_789';
-      
-      httpClient.setApiKey(newApiKey);
-
-      expect(mockAxiosInstance.defaults.headers.common['Authorization']).toBe(`Bearer ${newApiKey}`);
-    });
-  });
 });
