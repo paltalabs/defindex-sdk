@@ -44,11 +44,10 @@ The SDK provides methods organized into key areas:
 - **System**: healthCheck() - API health monitoring
 
 ### Authentication Flow
-1. SDK can initialize with email/password for automatic login
-2. Manual login sets Authorization header with Bearer token
-3. JWT access tokens used for all authenticated requests
-4. Refresh token functionality available for token renewal
-5. Role-based access control for administrative operations
+1. SDK can initialize with API key for automatic authentication (recommended)
+2. Alternative: Manual login sets Authorization header with Bearer token
+3. API key or JWT access tokens used for all authenticated requests
+4. Role-based access control for administrative operations
 
 ### Type System
 Comprehensive TypeScript types are defined in `src/types/`:
@@ -90,7 +89,7 @@ export DEFINDEX_API_PASSWORD="your_password"
 ### SDK Configuration
 The SDK accepts a `DefindexSDKConfig` object including:
 - `apiKey` - API key for authentication (recommended, optional)
-- `email` and `password` - Credentials for automatic login (alternative to API key, optional)
+- `email` and `password` - Credentials for legacy support (optional, deprecated)
 - `baseUrl` - Custom API base URL (optional, defaults to 'https://api.defindex.io')
 - `timeout` - Request timeout in milliseconds (default 30000)
 
@@ -112,10 +111,10 @@ The SDK accepts a `DefindexSDKConfig` object including:
 
 ### Authentication
 - API key authentication with Bearer tokens (recommended)
-- JWT-based authentication with Bearer tokens (alternative)
-- Automatic login capability in SDK constructor
+- JWT-based authentication with Bearer tokens (legacy support)
+- No automatic login in SDK constructor - authentication via config only
 - Server-side focused - credentials should not be exposed to frontend
-- Support for token refresh workflows
+- API key provides persistent authentication without token refresh
 
 ### HTTP Client Architecture
 - Modified from original Soroswap implementation to support DeFindex authentication
@@ -170,9 +169,10 @@ The SDK supports different operational roles:
 
 ## Migration Context
 
-This SDK is being migrated from a Soroswap-based implementation to DeFindex. Key differences:
-- Authentication supports both API keys (recommended) and email/password + JWT tokens
+This SDK has been migrated from a Soroswap-based implementation to DeFindex. Key differences:
+- Authentication now primarily uses API keys, with JWT tokens as legacy support
 - Vault-focused operations instead of DEX/trading operations
-- Factory pattern for vault creation
-- Administrative functions for vault management
+- Factory pattern for vault creation with role-based management
+- Administrative functions for vault management (pause/unpause, emergency rescue)
 - Network parameter handling per operation instead of global configuration
+- Comprehensive type safety for all vault operations and responses
