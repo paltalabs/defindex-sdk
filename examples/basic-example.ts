@@ -32,14 +32,15 @@ const EXAMPLE_ADDRESSES = {
   REBALANCE_MANAGER: 'GCURWTJWQJ7CCWIBSMEJKVMJJKDK6QAARAD3JQ6GLTON7MQYBSFFQZWI',
   USER: 'GCURWTJWQJ7CCWIBSMEJKVMJJKDK6QAARAD3JQ6GLTON7MQYBSFFQZWI',
   XLM_ASSET: 'CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC',
-  STRATEGY: 'CBO77JLVAT54YBRHBY4PSITLILWAAXX5JHPXGBFRW2XUFQKXZ3ZLJ7MJ'
+  STRATEGY: 'CBO77JLVAT54YBRHBY4PSITLILWAAXX5JHPXGBFRW2XUFQKXZ3ZLJ7MJ',
+  DEPLOYED_VAULT: 'CAEJL2XKGLSWCPKSVVRYAWLQKE4DS24YCZX53CLUMWGOVEOERSAZH5UM'
 };
 
 /**
  * Main function that executes the complete example
  */
 async function runExample(): Promise<void> {
-  console.log('🚀 Starting DeFindex SDK example...\n');
+  console.log('🚀 Starting DeFindex SDK example...');
 
   // Step 1: Initialize SDK
   const sdk = await initializeSDK();
@@ -57,11 +58,11 @@ async function runExample(): Promise<void> {
   if (vaultAddress) {
     await vaultOperationsExample(sdk, vaultAddress);
   }
-  
+
   // Step 6: Administrative management (simulated)
-  await vaultManagementExample(sdk, vaultAddress || 'EXAMPLE_VAULT_ADDRESS');
+  await vaultManagementExample(sdk, EXAMPLE_ADDRESSES.DEPLOYED_VAULT);
   
-  console.log('\n✅ Example completed successfully!');
+  console.log('✅ Example completed successfully!');
 }
 
 /**
@@ -71,23 +72,12 @@ async function initializeSDK(): Promise<DefindexSDK> {
   console.log('📋 Initializing SDK...');
   
   const apiKey = process.env.DEFINDEX_API_KEY;
-  const email = process.env.DEFINDEX_API_EMAIL;
-  const password = process.env.DEFINDEX_API_PASSWORD;
-  
   let sdk: DefindexSDK;
   
   if (apiKey) {
     console.log('🔑 Using API Key authentication (recommended)');
     sdk = new DefindexSDK({
       apiKey,
-      baseUrl: API_BASE_URL,
-      timeout: 30000
-    });
-  } else if (email && password) {
-    console.log('📧 Using email/password authentication (legacy)');
-    sdk = new DefindexSDK({
-      email,
-      password,
       baseUrl: API_BASE_URL,
       timeout: 30000
     });
@@ -99,7 +89,7 @@ async function initializeSDK(): Promise<DefindexSDK> {
     });
   }
   
-  console.log('✅ SDK initialized successfully\n');
+  console.log('✅ SDK initialized successfully');
   return sdk;
 }
 
@@ -112,7 +102,7 @@ async function checkAPIHealth(sdk: DefindexSDK): Promise<void> {
   try {
     const health = await sdk.healthCheck();
     console.log('📊 API status:', health);
-    console.log('✅ API working correctly\n');
+    console.log('✅ API working correctly');
   } catch (error) {
     console.error('❌ Error checking API health:', error);
     throw error;
@@ -128,7 +118,7 @@ async function getFactoryAddress(sdk: DefindexSDK): Promise<string> {
   try {
     const factory = await sdk.getFactoryAddress(NETWORK);
     console.log('🎯 Factory address:', factory.address);
-    console.log('✅ Factory found\n');
+    console.log('✅ Factory found');
     return factory.address;
   } catch (error) {
     console.error('❌ Error getting factory:', error);
@@ -173,16 +163,16 @@ async function createVaultExample(sdk: DefindexSDK): Promise<string | null> {
     
     if (response.xdr) {
       console.log('🎉 Vault created successfully!');
-      console.log('🔗 XDR to sign:', response.xdr.substring(0, 50) + '...');
+      console.log('🔗 XDR to sign:', response.xdr);
       console.log('📊 Simulation result:', response.simulation_result);
       
       // In a real case, you would sign the XDR and send it here
       console.log('📝 Note: In production, sign this XDR with your wallet and send it using sendTransaction()');
       
       // Simulate vault address created
-      const simulatedVaultAddress = 'GVAULT123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ123456789ABC';
+      const simulatedVaultAddress = EXAMPLE_ADDRESSES.DEPLOYED_VAULT;
       console.log('🏦 Simulated vault address:', simulatedVaultAddress);
-      console.log('✅ Vault created\n');
+      console.log('✅ Vault created');
       
       return simulatedVaultAddress;
     } else {
@@ -247,17 +237,16 @@ function displayVaultInfo(vaultInfo: VaultInfoResponse): void {
   console.log(`   🏢 DeFindex Fee: ${vaultInfo.feesBps.defindexFee / 100}%`);
   
   console.log('   🔧 Assets and Strategies:');
-  vaultInfo.assets.forEach((asset, index) => {
-    console.log(`     ${index + 1}. ${asset.name} (${asset.symbol})`);
-    console.log(`        📍 Address: ${asset.address}`);
-    asset.strategies.forEach((strategy, stratIndex) => {
-      const status = strategy.paused ? '⏸️  PAUSED' : '▶️  ACTIVE';
-      console.log(`        📈 Strategy ${stratIndex + 1}: ${strategy.name} - ${status}`);
-      console.log(`           📍 Address: ${strategy.address}`);
+  vaultInfo.assets.map((asset, index) => {
+    console.log(`     ${index + 1}. Asset: ${asset.address}`);
+    console.log(`        Strategies:`);
+    asset.strategies.map((strategy, idx) => {
+      console.log(`          ${idx + 1}. Strategy: ${strategy.name} (${strategy.address})`);
+      console.log(`             Paused: ${strategy.paused ? 'Yes' : 'No'}`);
     });
   });
   
-  console.log('✅ Vault information obtained\n');
+  console.log('✅ Vault information obtained');
 }
 
 /**
@@ -279,10 +268,10 @@ async function depositExample(sdk: DefindexSDK, vaultAddress: string): Promise<v
     const response = await sdk.depositToVault(vaultAddress, depositData, NETWORK);
     
     console.log('🎉 Deposit prepared successfully!');
-    console.log('🔗 XDR to sign:', response.xdr.substring(0, 50) + '...');
+    console.log('🔗 XDR to sign:', response.xdr);
     console.log('📊 Simulation response:', response.simulationResponse);
     console.log('📝 Note: Sign this XDR and send it to complete the deposit');
-    console.log('✅ Deposit simulated\n');
+    console.log('✅ Deposit simulated');
   } catch (error) {
     console.error('❌ Error in deposit:', error);
   }
@@ -308,7 +297,7 @@ async function withdrawExample(sdk: DefindexSDK, vaultAddress: string): Promise<
     console.log('🎉 Withdrawal prepared successfully!');
     console.log('🔗 XDR to sign:', response.xdr.substring(0, 50) + '...');
     console.log('📊 Simulation response:', response.simulationResponse);
-    console.log('✅ Withdrawal by amount simulated\n');
+    console.log('✅ Withdrawal by amount simulated');
   } catch (error) {
     console.error('❌ Error in withdrawal:', error);
   }
@@ -334,7 +323,7 @@ async function withdrawSharesExample(sdk: DefindexSDK, vaultAddress: string): Pr
     console.log('🎉 Share withdrawal prepared successfully!');
     console.log('🔗 XDR to sign:', response.xdr.substring(0, 50) + '...');
     console.log('📊 Simulation response:', response.simulationResponse);
-    console.log('✅ Share withdrawal simulated\n');
+    console.log('✅ Share withdrawal simulated');
   } catch (error) {
     console.error('❌ Error in share withdrawal:', error);
   }
@@ -353,7 +342,7 @@ async function getVaultAPYExample(sdk: DefindexSDK, vaultAddress: string): Promi
     console.log(`   📈 Current APY: ${apy.apyPercent}%`);
     console.log(`   ⏰ Calculation period: ${apy.period}`);
     console.log(`   🕐 Last updated: ${apy.lastUpdated}`);
-    console.log('✅ APY obtained\n');
+    console.log('✅ APY obtained');
   } catch (error) {
     console.error('❌ Error getting APY:', error);
   }
@@ -375,7 +364,8 @@ async function vaultManagementExample(sdk: DefindexSDK, vaultAddress: string): P
       strategy_address: EXAMPLE_ADDRESSES.STRATEGY,
       caller: EXAMPLE_ADDRESSES.MANAGER // Requires Strategy Manager role
     };
-    
+    console.log('vault address:', vaultAddress);
+    console.log('📝 Pause parameters:', pauseData);
     const pauseResponse = await sdk.pauseStrategy(vaultAddress, pauseData, NETWORK);
     console.log('✅ Strategy paused:', pauseResponse.xdr ? 'XDR generated' : 'Error');
     
@@ -400,11 +390,10 @@ async function vaultManagementExample(sdk: DefindexSDK, vaultAddress: string): P
     console.log('✅ Emergency rescue:', rescueResponse.xdr ? 'XDR generated' : 'Error');
     
   } catch (error) {
-    console.log('ℹ️  Management operations simulated (may fail without appropriate roles)');
-    console.log('   Details:', error instanceof Error ? error.message : 'Unknown error');
+    console.error('   Details:', error);
   }
   
-  console.log('✅ Vault management simulated\n');
+  console.log('✅ Vault management simulated');
 }
 
 /**
@@ -451,24 +440,18 @@ function checkEnvironmentSetup(): void {
   console.log('🔍 Checking environment configuration...');
   
   const requiredVars = [
-    'DEFINDEX_API_KEY',
-    'DEFINDEX_API_EMAIL',
-    'DEFINDEX_API_PASSWORD'
+    'DEFINDEX_API_KEY'
   ];
   
   const hasApiKey = !!process.env.DEFINDEX_API_KEY;
-  const hasEmailPass = !!(process.env.DEFINDEX_API_EMAIL && process.env.DEFINDEX_API_PASSWORD);
   
-  if (!hasApiKey && !hasEmailPass) {
+  if (!hasApiKey) {
     console.log('⚠️  Warning: No authentication credentials found');
     console.log('   For full functionality, configure one of these options:');
     console.log('   1. DEFINDEX_API_KEY=your_api_key (recommended)');
-    console.log('   2. DEFINDEX_API_EMAIL=your_email and DEFINDEX_API_PASSWORD=your_password');
-    console.log('   The example will continue with limited functionality.\n');
+    console.log('   The example will continue with limited functionality.');
   } else if (hasApiKey) {
-    console.log('✅ API Key found - using recommended authentication\n');
-  } else {
-    console.log('✅ Email/password credentials found - using legacy authentication\n');
+    console.log('✅ API Key found - using recommended authentication');
   }
 }
 
@@ -478,7 +461,7 @@ if (require.main === module) {
   
   runExample()
     .then(() => {
-      console.log('\n🎊 Example completed successfully!');
+      console.log('🎊 Example completed successfully!');
       console.log('📚 For more information, check the documentation in docs/');
       process.exit(0);
     })
