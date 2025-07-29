@@ -1,14 +1,14 @@
 import { DefindexSDK } from '../src';
 import {
-  SupportedNetworks,
   CreateDefindexVault,
   CreateDefindexVaultDepositDto,
   DepositToVaultParams,
+  PauseStrategyParams,
+  RescueFromVaultParams,
+  SupportedNetworks,
+  UnpauseStrategyParams,
   WithdrawFromVaultParams,
   WithdrawSharesParams,
-  RescueFromVaultParams,
-  PauseStrategyParams,
-  UnpauseStrategyParams,
 } from '../src/types';
 
 // Mock axios to avoid actual HTTP calls

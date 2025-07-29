@@ -1,5 +1,5 @@
 import { DefindexSDK } from "../../src";
-import { 
+import {
   SupportedNetworks,
 } from "../../src/types";
 
@@ -143,20 +143,20 @@ describe("DefindexSDK - Integration Tests", () => {
       if (skipTests) return;
 
       // Using a placeholder vault address - this will likely fail but shows the API contract
-      const testVaultAddress = "GVAULT_TEST_ADDRESS_PLACEHOLDER_FOR_INTEGRATION_TEST";
+      const testVaultAddress = "CAIZ3NMNPEN5SQISJV7PD2YY6NI6DIPFA4PCRUBOGDE4I7A3DXDLK5OI";
 
       try {
-        const vaultInfo = await sdk.getVaultInfo(testVaultAddress, SupportedNetworks.TESTNET);
+        const vaultInfo = await sdk.getVaultInfo(testVaultAddress, SupportedNetworks.MAINNET);
+
         console.log("🏦 Vault info:", {
           name: vaultInfo.name,
           symbol: vaultInfo.symbol,
-          totalSupply: vaultInfo.totalSupply,
-          totalAssets: vaultInfo.totalAssets,
-          assetsCount: vaultInfo.assets?.length || 0
+          totalSupply: vaultInfo.totalManagedFunds[0].total_amount,
         });
 
-        expect(vaultInfo.name).toBeDefined();
-        expect(vaultInfo.symbol).toBeDefined();
+        expect(vaultInfo.name).toBe("DeFindex-Vault-BeansEurcVault");
+        expect(vaultInfo.symbol).toBe("BNSEURC");
+        expect(vaultInfo.totalManagedFunds[0].total_amount).toBeDefined();
 
         console.log("✅ Vault info retrieval successful");
       } catch (error: any) {
@@ -169,14 +169,14 @@ describe("DefindexSDK - Integration Tests", () => {
     it("should handle vault balance request gracefully", async () => {
       if (skipTests) return;
 
-      const testVaultAddress = "GVAULT_TEST_ADDRESS_PLACEHOLDER";
-      const testUserAddress = "GUSER_TEST_ADDRESS_PLACEHOLDER";
+      const testVaultAddress = "CAIZ3NMNPEN5SQISJV7PD2YY6NI6DIPFA4PCRUBOGDE4I7A3DXDLK5OI";
+      const testUserAddress = "GAWXKXDQ4ZNNVFZLBQHSGAUQ242O3F5ASWLTPGFPZK4EM7JSDJMAWY5C";
 
       try {
         const balance = await sdk.getVaultBalance(
           testVaultAddress,
           testUserAddress,
-          SupportedNetworks.TESTNET
+          SupportedNetworks.MAINNET
         );
         console.log("💰 Vault balance:", {
           dfTokens: balance.dfTokens,
@@ -233,7 +233,6 @@ describe("DefindexSDK - Integration Tests", () => {
           SupportedNetworks.TESTNET,
           false // Don't use LaunchTube
         );
-        console.log("📤 Transaction result:", result);
 
         expect(result).toBeDefined();
 
