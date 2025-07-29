@@ -178,7 +178,7 @@ try {
   
   console.log('✅ Deposit prepared successfully!');
   console.log('XDR to sign:', response.xdr);
-  console.log('Shares to mint:', response.simulationResponse.sharesToMint); // e.g., "1000000"
+  console.log('Simulation result:', response.simulationResponse); // Simulation details
   
   // Sign with wallet and submit
   // const result = await sdk.sendTransaction(signedXDR, SupportedNetworks.TESTNET);
@@ -203,7 +203,7 @@ try {
   
   console.log('✅ Withdrawal prepared successfully!');
   console.log('XDR to sign:', response.xdr);
-  console.log('Withdrawn amounts:', response.simulationResponse.withdrawn_amounts); // ["500000"]
+  console.log('Simulation result:', response.simulationResponse); // Withdrawal details
 } catch (error) {
   console.error('Withdrawal failed:', error.message);
 }
@@ -225,7 +225,7 @@ try {
   
   console.log('✅ Share withdrawal prepared successfully!');
   console.log('XDR to sign:', response.xdr);
-  console.log('Withdrawn amounts:', response.simulationResponse.withdrawn_amounts); // ["1000000"]
+  console.log('Simulation result:', response.simulationResponse); // Share withdrawal details
 } catch (error) {
   console.error('Share withdrawal failed:', error.message);
 }
@@ -256,7 +256,7 @@ try {
 ### Deposit to Vault
 
 ```typescript
-import { DepositToVaultParams } from 'defindex-sdk';
+import { DepositToVaultParams } from '@defindex/sdk';
 
 const depositData: DepositToVaultParams = {
   amounts: [1000000, 2000000], // Amounts for each asset
@@ -273,7 +273,7 @@ try {
   );
   
   console.log('Deposit XDR:', response.xdr);
-  console.log('Expected shares to mint:', response.simulation_response.sharesToMint);
+  console.log('Simulation result:', response.simulationResponse);
   
   // Sign the XDR and submit the transaction
 } catch (error) {
@@ -284,7 +284,7 @@ try {
 ### Withdraw from Vault (by Amount)
 
 ```typescript
-import { WithdrawFromVaultParams } from 'defindex-sdk';
+import { WithdrawFromVaultParams } from '@defindex/sdk';
 
 const withdrawData: WithdrawFromVaultParams = {
   amounts: [500000, 1000000], // Specific amounts to withdraw
@@ -300,7 +300,7 @@ try {
   );
   
   console.log('Withdrawal XDR:', response.xdr);
-  console.log('Shares to burn:', response.simulation_response.sharesToBurn);
+  console.log('Simulation result:', response.simulationResponse);
 } catch (error) {
   console.error('Withdrawal failed:', error.message);
 }
@@ -309,7 +309,7 @@ try {
 ### Withdraw from Vault (by Shares)
 
 ```typescript
-import { WithdrawSharesParams } from 'defindex-sdk';
+import { WithdrawSharesParams } from '@defindex/sdk';
 
 const shareData: WithdrawSharesParams = {
   shares: 1000000, // Number of vault shares to burn
@@ -325,7 +325,7 @@ try {
   );
   
   console.log('Share withdrawal XDR:', response.xdr);
-  console.log('Expected amounts:', response.simulation_response.amounts);
+  console.log('Simulation result:', response.simulationResponse);
 } catch (error) {
   console.error('Share withdrawal failed:', error.message);
 }
@@ -350,7 +350,7 @@ try {
 ### Emergency Rescue
 
 ```typescript
-import { RescueFromVaultParams } from 'defindex-sdk';
+import { RescueFromVaultParams } from '@defindex/sdk';
 
 // Note: Requires Emergency Manager role
 const rescueData: RescueFromVaultParams = {
@@ -378,7 +378,7 @@ try {
 ### Pause Strategy
 
 ```typescript
-import { PauseStrategyParams } from 'defindex-sdk';
+import { PauseStrategyParams } from '@defindex/sdk';
 
 // Note: Requires Strategy Manager role
 const pauseData: PauseStrategyParams = {
@@ -403,7 +403,7 @@ try {
 ### Unpause Strategy
 
 ```typescript
-import { UnpauseStrategyParams } from 'defindex-sdk';
+import { UnpauseStrategyParams } from '@defindex/sdk';
 
 // Note: Requires Strategy Manager role
 const unpauseData: UnpauseStrategyParams = {
@@ -430,7 +430,7 @@ try {
 ### Submit Transaction to Stellar
 
 ```typescript
-import { SupportedNetworks } from 'defindex-sdk';
+import { SupportedNetworks } from '@defindex/sdk';
 
 // After signing a transaction XDR with your wallet
 const signedXDR = 'AAAA...'; // Your signed transaction XDR
@@ -471,41 +471,42 @@ try {
 }
 ```
 
-## Validation Helpers
+## Input Validation
 
-The SDK includes validation helpers to check data before sending requests:
+While the SDK doesn't include built-in validation helpers, you should validate inputs before making API calls:
 
 ```typescript
-import { 
-  isStellarAddress, 
-  isValidSlippage, 
-  validateDepositParams,
-  SDKValidationError 
-} from 'defindex-sdk';
-
-// Validate Stellar addresses
-if (isStellarAddress('GCKFBEIYTKP6RNYXDXCVN5NHQG7C37VFTCB5BBXZ4F6PUB7FFLLKSZQJ')) {
-  console.log('Valid Stellar address');
+// Validate Stellar addresses (basic format check)
+function isValidStellarAddress(address: string): boolean {
+  return /^G[A-Z2-7]{55}$/.test(address);
 }
 
-// Validate slippage
-if (isValidSlippage(100)) { // 1%
-  console.log('Valid slippage tolerance');
+// Validate slippage tolerance
+function isValidSlippage(slippageBps: number): boolean {
+  return slippageBps >= 0 && slippageBps <= 10000; // 0% to 100%
 }
 
-// Validate deposit parameters
+// Example validation before deposit
+if (!isValidStellarAddress(userAddress)) {
+  throw new Error('Invalid Stellar address format');
+}
+
+if (!isValidSlippage(100)) {
+  throw new Error('Invalid slippage tolerance');
+}
+
+// Proceed with deposit
+const depositData = {
+  amounts: [1000000],
+  caller: userAddress,
+  invest: true,
+  slippageBps: 100
+};
+
 try {
-  validateDepositParams({
-    amounts: [1000000, 2000000],
-    caller: 'GUSER...',
-    invest: true,
-    slippageBps: 100
-  });
-  console.log('Deposit parameters are valid');
+  const response = await sdk.depositToVault(vaultAddress, depositData, network);
 } catch (error) {
-  if (error instanceof SDKValidationError) {
-    console.error(`Validation error in ${error.field}: ${error.message}`);
-  }
+  console.error('Deposit failed:', error.message);
 }
 ```
 
@@ -520,7 +521,7 @@ import {
   isValidationError, 
   isNetworkError,
   DefindexSDKError 
-} from 'defindex-sdk';
+} from '@defindex/sdk';
 
 try {
   const response = await sdk.someOperation();
@@ -591,10 +592,12 @@ try {
 ### 2. Validate Inputs Before API Calls
 
 ```typescript
-// ✅ Good
-import { isStellarAddress, ValidationError } from 'defindex-sdk';
+// ✅ Good - Basic validation before API calls
+function isValidStellarAddress(address: string): boolean {
+  return /^G[A-Z2-7]{55}$/.test(address);
+}
 
-if (!isStellarAddress(userAddress)) {
+if (!isValidStellarAddress(userAddress)) {
   throw new Error('Invalid Stellar address provided');
 }
 
@@ -609,7 +612,7 @@ try {
 
 ```typescript
 // ✅ Good - Use provided types for better development experience
-import { DepositToVaultParams, SupportedNetworks } from 'defindex-sdk';
+import { DepositToVaultParams, SupportedNetworks } from '@defindex/sdk';
 
 const depositData: DepositToVaultParams = {
   amounts: [1000000],

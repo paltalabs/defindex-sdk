@@ -360,7 +360,7 @@ import {
   VaultBalance,
   VaultAPY,
   // ... and many more
-} from 'defindex-sdk';
+} from '@defindex/sdk';
 ```
 
 ## 🌐 Frontend Integration
