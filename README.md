@@ -18,7 +18,7 @@ Official TypeScript SDK for [DeFindex](https://defindex.io) - A decentralized va
 ## 🚀 Installation
 
 ```bash
-npm install @defindex/sdk
+pnpm install @defindex/sdk
 ```
 
 ## 📖 Quick Start
