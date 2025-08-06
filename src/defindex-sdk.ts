@@ -6,18 +6,17 @@ import {
   CreateVaultResponse,
   DepositToVaultParams,
   FactoryAddressResponse,
+  LaunchTubeResponse,
   PauseStrategyParams,
   RescueFromVaultParams,
-  StellarSendTransactionResponse,
+  SendTransactionResponse,
   SupportedNetworks,
   UnpauseStrategyParams,
   VaultApyResponse,
   VaultBalanceResponse,
   VaultInfoResponse,
-  VaultRescueResponse,
-  VaultStrategyStatusResponse,
   VaultTransactionResponse,
-  WithdrawFromVaultParams,
+  WithdrawParams,
   WithdrawSharesParams,
 } from './types';
 
@@ -246,7 +245,7 @@ export class DefindexSDK {
    */
   public async withdrawFromVault(
     vaultAddress: string,
-    withdrawData: WithdrawFromVaultParams,
+    withdrawData: WithdrawParams,
     network: SupportedNetworks,
   ): Promise<VaultTransactionResponse> {
     return this.httpClient.post<VaultTransactionResponse>(
@@ -316,8 +315,8 @@ export class DefindexSDK {
     vaultAddress: string,
     rescueData: RescueFromVaultParams,
     network: SupportedNetworks,
-  ): Promise<VaultRescueResponse> {
-    return this.httpClient.post<VaultRescueResponse>(
+  ): Promise<VaultTransactionResponse> {
+    return this.httpClient.post<VaultTransactionResponse>(
       `/vault/${vaultAddress}/rescue?network=${network}`,
       rescueData,
     );
@@ -342,8 +341,8 @@ export class DefindexSDK {
     vaultAddress: string,
     strategyData: PauseStrategyParams,
     network: SupportedNetworks,
-  ): Promise<VaultStrategyStatusResponse> {
-    return this.httpClient.post<VaultStrategyStatusResponse>(
+  ): Promise<VaultTransactionResponse> {
+    return this.httpClient.post<VaultTransactionResponse>(
       `/vault/${vaultAddress}/pause-strategy?network=${network}`,
       strategyData,
     );
@@ -368,8 +367,8 @@ export class DefindexSDK {
     vaultAddress: string,
     strategyData: UnpauseStrategyParams,
     network: SupportedNetworks,
-  ): Promise<VaultStrategyStatusResponse> {
-    return this.httpClient.post<VaultStrategyStatusResponse>(
+  ): Promise<VaultTransactionResponse> {
+    return this.httpClient.post<VaultTransactionResponse>(
       `/vault/${vaultAddress}/unpause-strategy?network=${network}`,
       strategyData,
     );
@@ -390,9 +389,9 @@ export class DefindexSDK {
     xdr: string,
     network: SupportedNetworks,
     launchtube?: boolean,
-  ): Promise<StellarSendTransactionResponse> {
+  ): Promise<SendTransactionResponse | LaunchTubeResponse> {
     const payload = { xdr, launchtube: launchtube ?? false };
-    return this.httpClient.post<StellarSendTransactionResponse>(
+    return this.httpClient.post<SendTransactionResponse | LaunchTubeResponse>(
       `/send?network=${network}`,
       payload,
     );

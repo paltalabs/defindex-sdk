@@ -7,7 +7,7 @@ import {
   RescueFromVaultParams,
   SupportedNetworks,
   UnpauseStrategyParams,
-  WithdrawFromVaultParams,
+  WithdrawParams,
   WithdrawSharesParams,
 } from '../src/types';
 
@@ -138,7 +138,7 @@ describe('DefindexSDK - Unit Tests', () => {
     });
 
     it('should withdraw from vault', async () => {
-      const withdrawData: WithdrawFromVaultParams = { amounts: [50], caller: 'user_addr' };
+      const withdrawData: WithdrawParams = { amounts: [50], caller: 'user_addr' };
       const mockResponse = { xdr: 'withdraw_xdr' };
       mockHttpClient.post.mockResolvedValue(mockResponse);
 

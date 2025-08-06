@@ -12,48 +12,14 @@ export interface Strategy {
   paused: boolean;
 }
 
-/**
- * Configuration for creating a DeFindex vault
- * @example
- * ```typescript
- * const vaultConfig: CreateDefindexVault = {
- *   roles: {
- *     0: "GEMERGENCY...", // Emergency Manager
- *     1: "GFEE...",      // Fee Receiver
- *     2: "GMANAGER...",  // Vault Manager
- *     3: "GREBALANCE..." // Rebalance Manager
- *   },
- *   vault_fee_bps: 100, // 1% fee
- *   assets: [{
- *     address: "CUSDC...",
- *     strategies: [{
- *       address: "GSTRATEGY...",
- *       name: "USDC Lending Strategy",
- *       paused: false
- *     }]
- *   }],
- *   name_symbol: { name: "My DeFi Vault", symbol: "MDV" },
- *   upgradable: true,
- *   caller: "GCREATOR..."
- * };
- * ```
- */
 export interface CreateDefindexVault {
-  /** Role assignments for vault management (0: Emergency, 1: Fee Receiver, 2: Manager, 3: Rebalance) */
   roles: Record<number, string>;
-  /** Vault fee in basis points (100 = 1%, max 10000 = 100%) */
   vault_fee_bps: number;
-  /** Assets and their associated strategies */
   assets: AssetStrategySet[];
-  /** Optional Soroswap router address for swaps */
   soroswap_router?: string;
-  /** Vault name and symbol metadata */
   name_symbol: Record<string, string>;
-  /** Whether the vault contract is upgradable */
   upgradable: boolean;
-  /** Address that will create and sign the vault creation transaction */
   caller: string;
-  /** Optional initial deposit amounts (deprecated, use CreateDefindexVaultDepositDto) */
   amounts?: number[];
 }
 
@@ -66,38 +32,27 @@ export interface CreateDefindexVaultResponse {
 
 /* Base parameter interfaces */
 interface BaseCallerParams {
-  /** Stellar address of the transaction caller/signer 
-   * @example "GCKFBEIYTKP6RNYXDXCVN5NHQG7C37VFTCB5BBXZ4F6PUB7FFLLKSZQJ"
-   */
   caller: string;
 }
 
 interface BaseStrategyParams extends BaseCallerParams {
-  /** Stellar address of the strategy contract 
-   * @example "GSTRATEGY123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ123456789ABC"
-   */
   strategy_address: string;
 }
 
 interface BaseAmountParams extends BaseCallerParams {
-  /** Array of amounts for each asset. Must be non-negative numbers. */
   amounts: number[];
-  /** Slippage tolerance in basis points (0-10000). 100 = 1%, 10000 = 100%. Defaults to 0. */
   slippageBps?: number;
 }
 
 /* Vault operation parameters */
 export interface DepositToVaultParams extends BaseAmountParams {
-  /** Whether to invest the deposited assets immediately. Defaults to true. */
-  invest?: boolean;
+  invest: boolean;
 }
 
-export interface WithdrawFromVaultParams extends BaseAmountParams {}
+export interface WithdrawParams extends BaseAmountParams {}
 
 export interface WithdrawSharesParams extends BaseCallerParams {
-  /** Amount of vault shares to withdraw. Must be a positive number. */
   shares: number;
-  /** Slippage tolerance in basis points (0-10000). 100 = 1%, 10000 = 100%. Defaults to 0. */
   slippageBps?: number;
 }
 
@@ -107,44 +62,33 @@ export interface PauseStrategyParams extends BaseStrategyParams {}
 
 export interface UnpauseStrategyParams extends BaseStrategyParams {}
 
-export interface SetFeeRecieverParams extends BaseCallerParams {
-  fee_reciever: string;
+/* Fee management interfaces */
+export interface LockFeesParams extends BaseCallerParams {
+  new_fee_bps?: number;
 }
 
-export interface SetManagerParams extends BaseCallerParams {
-  manager: string;
+export interface ReleaseFeesParams extends BaseStrategyParams {
+  amount: number;
+  strategy_address: string;
 }
 
-export interface SetEmergencyManagerParams extends BaseCallerParams {
-  emergency_manager: string;
-}
-
-export interface SetRebalanceManagerParams extends BaseCallerParams {
-  rebalance_manager: string;
-}
+export interface DistributeFeesParams extends BaseCallerParams {}
 
 /* Contract management interfaces */
-export interface UpgradeContractParams extends BaseCallerParams {
+export interface SetVaultRoleParams extends BaseCallerParams {
+  new_address: string;
+}
+export interface UpgradeWasmParams extends BaseCallerParams {
   new_wasm_hash: string;
 }
 
 export interface RebalanceParams extends BaseCallerParams {
-  instructions: Instruction[];
+  instructions: InstructionParam[];
 }
 
-/* Fee management interfaces */
-export interface LockFeesParams extends BaseCallerParams {
-  new_fee_bps: number;
-}
-
-export interface ReleaseFeesParams extends BaseStrategyParams {}
-
-export interface DistributeFeesParams extends BaseCallerParams {}
-
-/* Rebalance instruction types */
 export type Instruction =
-  | { type: "Unwind"; strategy: string; amount: number }
-  | { type: "Invest"; strategy: string; amount: number }
+  | { type: "Unwind"; strategy_address: string; amount: number }
+  | { type: "Invest"; strategy_address: string; amount: number }
   | {
       type: "SwapExactIn";  
       token_in: string;
@@ -160,6 +104,18 @@ export type Instruction =
       amount_out: number;
       amount_in_max: number;
       deadline: number;
+    };
+
+export type InstructionParam =
+  | { type: "Unwind"; strategy_address: string; amount: number }
+  | { type: "Invest"; strategy_address: string; amount: number }
+  | {
+      type: "SwapExactIn" | "SwapExactOut";
+      token_in: string;
+      token_out: string;
+      amount: number;
+      slippageToleranceBps?: number;
+      deadline?: number;
     };
 
 /* Vault data structures */
@@ -189,52 +145,14 @@ export interface VaultFees {
 }
 
 /* Vault endpoint response types */
-/**
- * Comprehensive vault information response
- * @example
- * ```typescript
- * const vaultInfo = await sdk.getVaultInfo('GVAULT...', SupportedNetworks.TESTNET);
- * console.log(`${vaultInfo.name} (${vaultInfo.symbol})`);
- * console.log(`Total Supply: ${vaultInfo.totalSupply}`);
- * console.log(`Total Assets: ${vaultInfo.totalAssets}`);
- * console.log(`Vault Fee: ${vaultInfo.feesBps.vaultFee / 100}%`);
- * ```
- */
 export interface VaultInfoResponse {
-  /** Vault contract address */
-  address: string;
-  /** Vault display name */
   name: string;
-  /** Vault token symbol */
   symbol: string;
-  /** Total vault shares in circulation */
-  totalSupply: number;
-  /** Total value locked in the vault */
-  totalAssets: number;
-  /** Assets managed by the vault */
+  roles: VaultRole;
   assets: VaultAsset[];
-  /** Detailed breakdown of managed funds per asset */
-  totalManagedFunds: {
-    /** Asset contract address */
-    asset: string;
-    /** Amount not actively invested */
-    idle_amount: number;
-    /** Amount actively invested in strategies */
-    invested_amount: number;
-    /** Per-strategy allocation breakdown */
-    strategy_allocations: {
-      /** Amount allocated to this strategy */
-      amount: number;
-      /** Whether the strategy is paused */
-      paused: boolean;
-      /** Strategy contract address */
-      strategy_address: string;
-    }[];
-    /** Total amount for this asset */
-    total_amount: number;
-  }[];
-  /** Fee structure in basis points */
+  totalManagedFunds: any[];
   feesBps: VaultFees;
+  apy: number;
 }
 
 export interface VaultBalanceResponse {
@@ -244,38 +162,69 @@ export interface VaultBalanceResponse {
 
 export interface VaultTransactionResponse extends BaseVaultTransactionResponse {}
 
-export interface VaultRescueResponse extends BaseVaultTransactionResponse {}
-
-export interface VaultStrategyStatusResponse extends BaseVaultTransactionResponse {}
-
-/**
- * Vault Annual Percentage Yield information
- * @example
- * ```typescript
- * const apy = await sdk.getVaultAPY('GVAULT...', SupportedNetworks.TESTNET);
- * console.log(`Current APY: ${apy.apyPercent}%`);
- * console.log(`Calculated over: ${apy.period}`);
- * console.log(`Last updated: ${apy.lastUpdated}`);
- * ```
- */
 export interface VaultApyResponse {
-  /** APY as decimal (0.15 = 15%) */
   apy: number;
-  /** APY as percentage (15.0 = 15%) */
-  apyPercent: number;
-  /** Time period over which APY was calculated */
-  period: string;
-  /** ISO timestamp of last APY calculation */
-  lastUpdated: string;
 }
 
-/* Vault service method types */
-export interface VaultInfoServiceResponse extends VaultInfoResponse {}
+/* Comprehensive Vault Methods Enum - Based on Contract Analysis */
+export enum VaultMethods {
+  // Core Vault Operations (VaultTrait)
+  DEPOSIT = "deposit",
+  WITHDRAW = "withdraw",
+  RESCUE = "rescue",
+  PAUSE_STRATEGY = "pause_strategy",
+  UNPAUSE_STRATEGY = "unpause_strategy",
+  GET_ASSETS = "get_assets",
+  FETCH_TOTAL_MANAGED_FUNDS = "fetch_total_managed_funds",
+  GET_ASSET_AMOUNTS_PER_SHARES = "get_asset_amounts_per_shares",
+  GET_FEES = "get_fees",
+  REPORT = "report",
 
-export interface VaultBalanceServiceResponse extends VaultBalanceResponse {}
+  // Admin Interface Methods (AdminInterfaceTrait)
+  SET_FEE_RECEIVER = "set_fee_receiver",
+  GET_FEE_RECEIVER = "get_fee_receiver",
+  SET_MANAGER = "set_manager",
+  GET_MANAGER = "get_manager",
+  SET_EMERGENCY_MANAGER = "set_emergency_manager",
+  GET_EMERGENCY_MANAGER = "get_emergency_manager",
+  SET_REBALANCE_MANAGER = "set_rebalance_manager",
+  GET_REBALANCE_MANAGER = "get_rebalance_manager",
+  UPGRADE = "upgrade",
 
-export interface VaultTransactionServiceResponse extends BaseVaultTransactionResponse {}
+  // Vault Management Methods (VaultManagementTrait)
+  REBALANCE = "rebalance",
+  LOCK_FEES = "lock_fees",
+  RELEASE_FEES = "release_fees",
+  DISTRIBUTE_FEES = "distribute_fees",
 
-export interface VaultApyServiceResponse {
-  apy: number;
+  TOTAL_SUPPLY = "total_supply",
+  BALANCE = "balance",
+  NAME = "name",
+  SYMBOL = "symbol",
+}
+
+export enum VaultInfoInvocationMethods {
+  GET_ASSETS = VaultMethods.GET_ASSETS,
+  FETCH_TOTAL_MANAGED_FUNDS = VaultMethods.FETCH_TOTAL_MANAGED_FUNDS,
+  GET_FEES = VaultMethods.GET_FEES,
+  GET_MANAGER = VaultMethods.GET_MANAGER,
+  GET_EMERGENCY_MANAGER = VaultMethods.GET_EMERGENCY_MANAGER,
+  GET_REBALANCE_MANAGER = VaultMethods.GET_REBALANCE_MANAGER,
+  GET_FEE_RECEIVER = VaultMethods.GET_FEE_RECEIVER,
+  NAME = VaultMethods.NAME,
+  SYMBOL = VaultMethods.SYMBOL,
+}
+
+export enum VaultGetRoleMethods {
+  GET_EMERGENCY_MANAGER = VaultMethods.GET_EMERGENCY_MANAGER,
+  GET_REBALANCE_MANAGER = VaultMethods.GET_REBALANCE_MANAGER,
+  GET_MANAGER = VaultMethods.GET_MANAGER,
+  GET_FEE_RECEIVER = VaultMethods.GET_FEE_RECEIVER,
+}
+
+export enum VaultSetRoleMethods {
+  SET_MANAGER = VaultMethods.SET_MANAGER,
+  SET_EMERGENCY_MANAGER = VaultMethods.SET_EMERGENCY_MANAGER,
+  SET_REBALANCE_MANAGER = VaultMethods.SET_REBALANCE_MANAGER,
+  SET_FEE_RECEIVER = VaultMethods.SET_FEE_RECEIVER,
 }

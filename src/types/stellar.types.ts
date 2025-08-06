@@ -1,35 +1,54 @@
-/* Stellar transaction response types */
-export interface StellarSendTransactionResponse  {
-  /** Transaction hash */
-  hash: string;
-  /** Transaction status */
-  status: 'PENDING' | 'SUCCESS' | 'ERROR';
-  /** Latest ledger number */
-  latestLedger: number;
-  /** Latest ledger close time */
-  latestLedgerCloseTime: number;
-  /** Error result XDR if transaction failed */
-  errorResultXdr?: string;
-}
-
-/* Union type for different transaction response formats */
-export type TransactionResponse = StellarSendTransactionResponse | LaunchTubeResponse;
-
 /* LaunchTube service response types */
 export interface LaunchTubeResponse {
-  hash?: string;
-  status: 'PENDING' | 'SUCCESS' | 'FAILED';
-  errorResultXdr?: string;
-  envelopeXdr?: string;
-  resultXdr?: string;
-  resultMetaXdr?: string;
-  error?: string;
-  message?: string;
+  status: string;
+  hash: string;
+  feeCharged: number;
+  envelopeXdr: string;
+  resultXdr: string;
+  resultMetaXdr: string;
+  returnValue: string;
+  diagnosticEventsXdr: string[];
+  txHash: string;
+  latestLedger: number;
+  latestLedgerCloseTime: string;
+  oldestLedger: number;
+  oldestLedgerCloseTime: string;
+  ledger: number;
+  createdAt: string;
+  applicationOrder: number;
+  feeBump: boolean;
 }
 
 /* LaunchTube error response */
 export interface LaunchTubeErrorResponse {
+  status: 'ERROR';
+  type: string;
+  hash?: string;
+  envelopeXdr?: string;
+  errorResultXdr?: string;
+  latestLedger?: number;
+  latestLedgerCloseTime?: string;
+  sim?: boolean;
+}
+
+export interface SendTransactionResponse {
+  status: string;
+  txHash: string;
+  latestLedger: number;
+  latestLedgerCloseTime: string;
+  oldestLedger: number;
+  oldestLedgerCloseTime: string;
+  ledger: number;
+  createdAt: string;
+  applicationOrder: number;
+  feeBump: boolean;
+  resultXdr: string;
+  resultMetaXdr: string;
+  envelopeXdr: string;
+  returnValue: any;
+}
+export interface SendTransactionErrorResponse {
+  message: string;
   error: string;
-  message?: string;
-  statusCode?: number;
+  statusCode: number;
 }
