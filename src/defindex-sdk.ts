@@ -5,16 +5,25 @@ import {
   CreateVaultDepositResponse,
   CreateVaultResponse,
   DepositToVaultParams,
+  DistributeFeesParams,
   FactoryAddressResponse,
   LaunchTubeResponse,
+  LockFeesParams,
   PauseStrategyParams,
+  RebalanceParams,
+  ReleaseFeesParams,
   RescueFromVaultParams,
   SendTransactionResponse,
+  SetVaultRoleParams,
   SupportedNetworks,
   UnpauseStrategyParams,
+  UpgradeWasmParams,
   VaultApyResponse,
   VaultBalanceResponse,
   VaultInfoResponse,
+  VaultRole,
+  VaultRoleResponse,
+  VaultRoles,
   VaultTransactionResponse,
   WithdrawParams,
   WithdrawSharesParams,
@@ -166,7 +175,7 @@ export class DefindexSDK {
    * @example
    * ```typescript
    * const vaultInfo = await sdk.getVaultInfo(
-   *   'GVAULT...',
+   *   'CVAULT...',
    *   SupportedNetworks.TESTNET
    * );
    * console.log(`Vault: ${vaultInfo.name} (${vaultInfo.symbol})`);
@@ -191,7 +200,7 @@ export class DefindexSDK {
    * @example
    * ```typescript
    * const balance = await sdk.getVaultBalance(
-   *   'GVAULT...',
+   *   'CVAULT...',
    *   'GUSER...',
    *   SupportedNetworks.TESTNET
    * );
@@ -206,6 +215,29 @@ export class DefindexSDK {
   ): Promise<VaultBalanceResponse> {
     return this.httpClient.get<VaultBalanceResponse>(
       `/vault/${vaultAddress}/balance?from=${userAddress}&network=${network}`,
+    );
+  }
+
+  /**
+   * Get vault report with transaction details
+   * @param vaultAddress - The vault contract address
+   * @param network - Stellar network (testnet or mainnet)
+   * @returns Vault report with transaction XDR and simulation response
+   * @example
+   * ```typescript
+   * const report = await sdk.getReport(
+   *   'CVAULT...',
+   *   SupportedNetworks.TESTNET
+   * );
+   * console.log(`Report XDR: ${report.xdr}`);
+   * ```
+   */
+  public async getReport(
+    vaultAddress: string,
+    network: SupportedNetworks,
+  ): Promise<VaultTransactionResponse> {
+    return this.httpClient.get<VaultTransactionResponse>(
+      `/vault/${vaultAddress}/report?network=${network}`,
     );
   }
 
@@ -240,7 +272,7 @@ export class DefindexSDK {
    *   caller: 'GUSER...',
    *   slippageBps: 100 // 1% slippage tolerance
    * };
-   * const response = await sdk.withdrawFromVault('GVAULT...', withdrawData, SupportedNetworks.TESTNET);
+   * const response = await sdk.withdrawFromVault('CVAULT...', withdrawData, SupportedNetworks.TESTNET);
    * ```
    */
   public async withdrawFromVault(
@@ -279,7 +311,7 @@ export class DefindexSDK {
    * @returns APY information including percentage and calculation period
    * @example
    * ```typescript
-   * const apy = await sdk.getVaultAPY('GVAULT...', SupportedNetworks.TESTNET);
+   * const apy = await sdk.getVaultAPY('CVAULT...', SupportedNetworks.TESTNET);
    * console.log(`APY: ${apy.apyPercent}% (calculated over ${apy.period})`);
    * ```
    */
@@ -297,6 +329,42 @@ export class DefindexSDK {
   //=======================================================================
 
   /**
+   * Rebalance vault strategies (Rebalance Manager role required)
+   * @param vaultAddress - The vault contract address
+   * @param rebalanceData - Rebalance parameters including investment instructions
+   * @param network - Stellar network (testnet or mainnet)
+   * @returns Transaction XDR for Rebalance Manager signing
+   * @example
+   * ```typescript
+   * const rebalanceData = {
+   *   caller: 'GREBALANCE_MANAGER...',
+   *   instructions: [
+   *     { type: 'Unwind', strategy_address: 'CSTRATEGY1...', amount: 500000 },
+   *     { type: 'Invest', strategy_address: 'CSTRATEGY2...', amount: 1000000 },
+   *     { 
+   *       type: 'SwapExactIn',
+   *       token_in: 'GTOKEN1...',
+   *       token_out: 'GTOKEN2...',
+   *       amount: 250000,
+   *       slippageToleranceBps: 100
+   *     }
+   *   ]
+   * };
+   * const response = await sdk.rebalanceVault('CVAULT...', rebalanceData, SupportedNetworks.TESTNET);
+   * ```
+   */
+  public async rebalanceVault(
+    vaultAddress: string,
+    rebalanceData: RebalanceParams,
+    network: SupportedNetworks,
+  ): Promise<VaultTransactionResponse> {
+    return this.httpClient.post<VaultTransactionResponse>(
+      `/vault/${vaultAddress}/rebalance?network=${network}`,
+      rebalanceData,
+    );
+  }
+
+  /**
    * Emergency rescue assets from strategy (Emergency Manager role required)
    * @param vaultAddress - The vault contract address
    * @param rescueData - Rescue parameters including strategy address and caller
@@ -305,10 +373,10 @@ export class DefindexSDK {
    * @example
    * ```typescript
    * const rescueData = {
-   *   strategy_address: 'GSTRATEGY...',
+   *   strategy_address: 'CSTRATEGY...',
    *   caller: 'GEMERGENCY_MANAGER...'
    * };
-   * const response = await sdk.emergencyRescue('GVAULT...', rescueData, SupportedNetworks.TESTNET);
+   * const response = await sdk.emergencyRescue('CVAULT...', rescueData, SupportedNetworks.TESTNET);
    * ```
    */
   public async emergencyRescue(
@@ -331,10 +399,10 @@ export class DefindexSDK {
    * @example
    * ```typescript
    * const strategyData = {
-   *   strategy_address: 'GSTRATEGY...',
-   *   caller: 'GSTRATEGY_MANAGER...'
+   *   strategy_address: 'CSTRATEGY...',
+   *   caller: 'CSTRATEGY_MANAGER...'
    * };
-   * const response = await sdk.pauseStrategy('GVAULT...', strategyData, SupportedNetworks.TESTNET);
+   * const response = await sdk.pauseStrategy('CVAULT...', strategyData, SupportedNetworks.TESTNET);
    * ```
    */
   public async pauseStrategy(
@@ -357,10 +425,10 @@ export class DefindexSDK {
    * @example
    * ```typescript
    * const strategyData = {
-   *   strategy_address: 'GSTRATEGY...',
+   *   strategy_address: 'CSTRATEGY...',
    *   caller: 'GSTRATEGY_MANAGER...'
    * };
-   * const response = await sdk.unpauseStrategy('GVAULT...', strategyData, SupportedNetworks.TESTNET);
+   * const response = await sdk.unpauseStrategy('CVAULT...', strategyData, SupportedNetworks.TESTNET);
    * ```
    */
   public async unpauseStrategy(
@@ -373,6 +441,172 @@ export class DefindexSDK {
       strategyData,
     );
   }
+
+  //=======================================================================
+  // Role Operations
+  //=======================================================================
+
+  /**
+   * Get a specific vault role address
+   * @param vaultAddress - The vault contract address
+   * @param network - Stellar network (testnet or mainnet)
+   * @param roleToGet - The role to retrieve (manager, emergency_manager, rebalance_manager, fee_receiver)
+   * @returns Role information with address
+   * @example
+   * ```typescript
+   * const role = await sdk.getVaultRole(
+   *   'CVAULT...',
+   *   SupportedNetworks.TESTNET,
+   *   VaultGetRoleMethods.GET_MANAGER
+   * );
+   * console.log(`Manager address: ${role.address}`);
+   * ```
+   */
+  public async getVaultRole(
+    vaultAddress: string,
+    network: SupportedNetworks,
+    roleToGet: VaultRoles
+  ): Promise<VaultRoleResponse> {
+    return this.httpClient.get<VaultRoleResponse>(
+      `/vault/${vaultAddress}/get/${roleToGet}?network=${network}`
+    );
+  }
+
+  /**
+   * Set a vault role to a new address (Manager role required)
+   * @param vaultAddress - The vault contract address
+   * @param roleData - Role assignment parameters including new address and caller
+   * @param network - Stellar network (testnet or mainnet)
+   * @returns Transaction XDR for Manager signing
+   * @example
+   * ```typescript
+   * const roleData = {
+   *   caller: 'GMANAGER...',
+   *   new_address: 'GNEW_MANAGER...'
+   * };
+   * const response = await sdk.setVaultRole('CVAULT...', roleData, SupportedNetworks.TESTNET);
+   * ```
+   */
+  public async setVaultRole(
+    vaultAddress: string,
+    roleToSet: VaultRoles,
+    roleData: SetVaultRoleParams,
+    network: SupportedNetworks,
+  ): Promise<VaultTransactionResponse> {
+    return this.httpClient.post<VaultTransactionResponse>(
+      `/vault/${vaultAddress}/set/${roleToSet}?network=${network}`,
+      roleData,
+    );
+  }
+
+  //=======================================================================
+  // Vault Management Operations
+  //=======================================================================
+
+  /**
+   * Lock vault fees and optionally update fee rate (Manager role required)
+   * @param vaultAddress - The vault contract address
+   * @param lockData - Lock fees parameters including optional new fee rate
+   * @param network - Stellar network (testnet or mainnet)
+   * @returns Transaction XDR for Manager signing
+   * @example
+   * ```typescript
+   * const lockData = {
+   *   caller: 'GMANAGER...',
+   *   new_fee_bps: 150 // Optional: new fee rate in basis points (1.5%)
+   * };
+   * const response = await sdk.lockVaultFees('CVAULT...', lockData, SupportedNetworks.TESTNET);
+   * ```
+   */
+  public async lockVaultFees(
+    vaultAddress: string,
+    lockData: LockFeesParams,
+    network: SupportedNetworks,
+  ): Promise<VaultTransactionResponse> {
+    return this.httpClient.post<VaultTransactionResponse>(
+      `/vault/${vaultAddress}/lock-fees?network=${network}`,
+      lockData,
+    );
+  }
+
+  /**
+   * Release fees from a specific strategy (Manager role required)
+   * @param vaultAddress - The vault contract address
+   * @param releaseData - Release fees parameters including strategy address and amount
+   * @param network - Stellar network (testnet or mainnet)
+   * @returns Transaction XDR for Manager signing
+   * @example
+   * ```typescript
+   * const releaseData = {
+   *   caller: 'GMANAGER...',
+   *   strategy_address: 'CSTRATEGY...',
+   *   amount: 100000
+   * };
+   * const response = await sdk.releaseVaultFees('CVAULT...', releaseData, SupportedNetworks.TESTNET);
+   * ```
+   */
+  public async releaseVaultFees(
+    vaultAddress: string,
+    releaseData: ReleaseFeesParams,
+    network: SupportedNetworks,
+  ): Promise<VaultTransactionResponse> {
+    return this.httpClient.post<VaultTransactionResponse>(
+      `/vault/${vaultAddress}/release-fees?network=${network}`,
+      releaseData,
+    );
+  }
+
+  /**
+   * Distribute accumulated vault fees to fee receiver (Manager role required)
+   * @param vaultAddress - The vault contract address
+   * @param distributeData - Distribution parameters including caller
+   * @param network - Stellar network (testnet or mainnet)
+   * @returns Transaction XDR for Manager signing
+   * @example
+   * ```typescript
+   * const distributeData = {
+   *   caller: 'GMANAGER...'
+   * };
+   * const response = await sdk.distributeVaultFees('CVAULT...', distributeData, SupportedNetworks.TESTNET);
+   * ```
+   */
+  public async distributeVaultFees(
+    vaultAddress: string,
+    distributeData: DistributeFeesParams,
+    network: SupportedNetworks,
+  ): Promise<VaultTransactionResponse> {
+    return this.httpClient.post<VaultTransactionResponse>(
+      `/vault/${vaultAddress}/distribute-fees?network=${network}`,
+      distributeData,
+    );
+  }
+
+  /**
+   * Upgrade vault WASM contract (Manager role required)
+   * @param vaultAddress - The vault contract address
+   * @param newWasmHash - Upgrade parameters including new WASM hash and caller
+   * @param network - Stellar network (testnet or mainnet)
+   * @returns Transaction XDR for Manager signing
+   * @example
+   * ```typescript
+   * const upgradeData = {
+   *   caller: 'GMANAGER...',
+   *   new_wasm_hash: 'abcd1234...' // New WASM hash to upgrade to
+   * };
+   * const response = await sdk.upgradeVaultWasm('CVAULT...', upgradeData, SupportedNetworks.TESTNET);
+   * ```
+   */
+  public async upgradeVaultWasm(
+    vaultAddress: string,
+    newWasmHash: UpgradeWasmParams,
+    network: SupportedNetworks,
+  ): Promise<VaultTransactionResponse> {
+    return this.httpClient.post<VaultTransactionResponse>(
+      `/vault/${vaultAddress}/upgrade?network=${network}`,
+      newWasmHash,
+    );
+  }
+
 
   //=======================================================================
   // Transaction Operations

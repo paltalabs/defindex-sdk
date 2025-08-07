@@ -228,3 +228,15 @@ export enum VaultSetRoleMethods {
   SET_REBALANCE_MANAGER = VaultMethods.SET_REBALANCE_MANAGER,
   SET_FEE_RECEIVER = VaultMethods.SET_FEE_RECEIVER,
 }
+
+export interface VaultRoleResponse {
+  function_called: VaultGetRoleMethods;
+  address: string;
+}
+
+export enum VaultRoles {
+  MANAGER = 'manager',
+  EMERGENCY_MANAGER = 'emergency-manager',
+  REBALANCE_MANAGER = 'rebalance-manager',
+  FEE_RECEIVER = 'fee-receiver',
+}

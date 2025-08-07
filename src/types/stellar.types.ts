@@ -1,3 +1,9 @@
+/* Stellar transaction submission types */
+export interface SendXdrDto {
+  xdr: string;
+  launchtube?: boolean;
+}
+
 /* LaunchTube service response types */
 export interface LaunchTubeResponse {
   status: string;

@@ -11,13 +11,19 @@
  * 4. Execute: pnpm run example
  */
 
-import { DefindexSDK, SupportedNetworks } from '../src';
+import { DefindexSDK, SupportedNetworks, VaultRoles } from '../src';
 import type {
   CreateDefindexVault,
   DepositToVaultParams,
-  WithdrawFromVaultParams,
+  WithdrawParams,
   WithdrawSharesParams,
-  VaultInfoResponse
+  VaultInfoResponse,
+  RebalanceParams,
+  SetVaultRoleParams,
+  LockFeesParams,
+  ReleaseFeesParams,
+  DistributeFeesParams,
+  UpgradeWasmParams,
 } from '../src/types';
 
 // Example configuration
@@ -219,6 +225,9 @@ async function vaultOperationsExample(sdk: DefindexSDK, vaultAddress: string): P
     // Get vault APY
     await getVaultAPYExample(sdk, vaultAddress);
     
+    // Get vault report
+    await getVaultReportExample(sdk, vaultAddress);
+    
   } catch (error) {
     console.error('❌ Error in vault operations:', error);
   }
@@ -230,15 +239,20 @@ async function vaultOperationsExample(sdk: DefindexSDK, vaultAddress: string): P
 function displayVaultInfo(vaultInfo: VaultInfoResponse): void {
   console.log('📋 Vault Information:');
   console.log(`   📛 Name: ${vaultInfo.name} (${vaultInfo.symbol})`);
-  console.log(`   🏦 Address: ${vaultInfo.address}`);
-  console.log(`   💹 Total Supply: ${vaultInfo.totalSupply}`);
-  console.log(`   💰 Total Assets: ${vaultInfo.totalAssets}`);
+  console.log(`   💰 Total Managed Funds: ${JSON.stringify(vaultInfo.totalManagedFunds)}`);
   console.log(`   💸 Vault Fee: ${vaultInfo.feesBps.vaultFee / 100}%`);
   console.log(`   🏢 DeFindex Fee: ${vaultInfo.feesBps.defindexFee / 100}%`);
+  console.log(`   📈 APY: ${vaultInfo.apy}%`);
+  
+  console.log('   👥 Roles:');
+  console.log(`     Manager: ${vaultInfo.roles.manager}`);
+  console.log(`     Emergency Manager: ${vaultInfo.roles.emergencyManager}`);
+  console.log(`     Rebalance Manager: ${vaultInfo.roles.rebalanceManager}`);
+  console.log(`     Fee Receiver: ${vaultInfo.roles.feeReceiver}`);
   
   console.log('   🔧 Assets and Strategies:');
   vaultInfo.assets.map((asset, index) => {
-    console.log(`     ${index + 1}. Asset: ${asset.address}`);
+    console.log(`     ${index + 1}. Asset: ${asset.name} (${asset.symbol}) - ${asset.address}`);
     console.log(`        Strategies:`);
     asset.strategies.map((strategy, idx) => {
       console.log(`          ${idx + 1}. Strategy: ${strategy.name} (${strategy.address})`);
@@ -283,7 +297,7 @@ async function depositExample(sdk: DefindexSDK, vaultAddress: string): Promise<v
 async function withdrawExample(sdk: DefindexSDK, vaultAddress: string): Promise<void> {
   console.log('💸 Simulating withdrawal by amount...');
   
-  const withdrawData: WithdrawFromVaultParams = {
+  const withdrawData: WithdrawParams = {
     amounts: [500000], // 0.5 USDC
     caller: EXAMPLE_ADDRESSES.USER,
     slippageBps: 100 // 1% slippage tolerance
@@ -295,7 +309,7 @@ async function withdrawExample(sdk: DefindexSDK, vaultAddress: string): Promise<
     const response = await sdk.withdrawFromVault(vaultAddress, withdrawData, NETWORK);
     
     console.log('🎉 Withdrawal prepared successfully!');
-    console.log('🔗 XDR to sign:', response.xdr.substring(0, 50) + '...');
+    console.log('🔗 XDR to sign:', response.xdr);
     console.log('📊 Simulation response:', response.simulationResponse);
     console.log('✅ Withdrawal by amount simulated');
   } catch (error) {
@@ -321,7 +335,7 @@ async function withdrawSharesExample(sdk: DefindexSDK, vaultAddress: string): Pr
     const response = await sdk.withdrawShares(vaultAddress, shareData, NETWORK);
     
     console.log('🎉 Share withdrawal prepared successfully!');
-    console.log('🔗 XDR to sign:', response.xdr.substring(0, 50) + '...');
+    console.log('🔗 XDR to sign:', response.xdr);
     console.log('📊 Simulation response:', response.simulationResponse);
     console.log('✅ Share withdrawal simulated');
   } catch (error) {
@@ -339,12 +353,32 @@ async function getVaultAPYExample(sdk: DefindexSDK, vaultAddress: string): Promi
     const apy = await sdk.getVaultAPY(vaultAddress, NETWORK);
     
     console.log('📊 APY Information:');
-    console.log(`   📈 Current APY: ${apy.apyPercent}%`);
-    console.log(`   ⏰ Calculation period: ${apy.period}`);
-    console.log(`   🕐 Last updated: ${apy.lastUpdated}`);
+    console.log(`   📈 Current APY: ${apy.apy}%`);
     console.log('✅ APY obtained');
   } catch (error) {
     console.error('❌ Error getting APY:', error);
+  }
+}
+
+/**
+ * Gets vault report
+ */
+async function getVaultReportExample(sdk: DefindexSDK, vaultAddress: string): Promise<void> {
+  console.log('📋 Getting vault report...');
+  
+  try {
+    const report = await sdk.getReport(vaultAddress, NETWORK);
+    
+    console.log('📊 Vault Report Information:');
+    if (report.xdr) {
+      console.log(`   🔗 Report XDR: ${report.xdr}`);
+    }
+    if (report.simulationResponse) {
+      console.log('   ⚡ Simulation completed successfully');
+    }
+    console.log('✅ Vault report obtained');
+  } catch (error) {
+    console.error('❌ Error getting vault report:', error);
   }
 }
 
@@ -389,11 +423,147 @@ async function vaultManagementExample(sdk: DefindexSDK, vaultAddress: string): P
     const rescueResponse = await sdk.emergencyRescue(vaultAddress, rescueData, NETWORK);
     console.log('✅ Emergency rescue:', rescueResponse.xdr ? 'XDR generated' : 'Error');
     
+    // Rebalance vault example
+    await rebalanceVaultExample(sdk, vaultAddress);
+    
+    // Role management examples
+    await roleManagementExamples(sdk, vaultAddress);
+    
+    // Fee management examples
+    await feeManagementExamples(sdk, vaultAddress);
+    
+    // Upgrade vault WASM example
+    await upgradeVaultExample(sdk, vaultAddress);
+    
   } catch (error) {
     console.error('   Details:', error);
   }
   
   console.log('✅ Vault management simulated');
+}
+
+/**
+ * Rebalance vault example
+ */
+async function rebalanceVaultExample(sdk: DefindexSDK, vaultAddress: string): Promise<void> {
+  console.log('⚖️ Simulating vault rebalance...');
+  
+  const rebalanceData: RebalanceParams = {
+    caller: EXAMPLE_ADDRESSES.REBALANCE_MANAGER,
+    instructions: [
+      {
+        type: 'Invest',
+        strategy_address: EXAMPLE_ADDRESSES.STRATEGY,
+        amount: 1000000
+      },
+      {
+        type: 'Unwind',
+        strategy_address: EXAMPLE_ADDRESSES.STRATEGY,
+        amount: 500000
+      },
+    ]
+  };
+  
+  try {
+    console.log('📝 Rebalance parameters:', JSON.stringify(rebalanceData, null, 2));
+    const response = await sdk.rebalanceVault(vaultAddress, rebalanceData, NETWORK);
+    
+    console.log('🎉 Rebalance prepared successfully!');
+    console.log('🔗 XDR to sign:', response.xdr);
+    console.log('✅ Vault rebalanced');
+  } catch (error) {
+    console.error('❌ Error in rebalance:', error);
+  }
+}
+
+/**
+ * Role management examples
+ */
+async function roleManagementExamples(sdk: DefindexSDK, vaultAddress: string): Promise<void> {
+  console.log('👥 Simulating role management...');
+  
+  try {
+    // Get current manager
+    console.log('📋 Getting current vault manager...');
+    const managerRole = await sdk.getVaultRole(vaultAddress, NETWORK, VaultRoles.MANAGER);
+    console.log(`   Current manager: ${managerRole.address}`);
+    
+    // Set new role example (simulated)
+    console.log('👤 Simulating role assignment...');
+    const roleData: SetVaultRoleParams = {
+      caller: EXAMPLE_ADDRESSES.MANAGER,
+      new_address: EXAMPLE_ADDRESSES.FEE_RECEIVER // Example new address
+    };
+    
+    const roleResponse = await sdk.setVaultRole(vaultAddress, VaultRoles.FEE_RECEIVER, roleData, NETWORK);
+    console.log('✅ Role assignment:', roleResponse.xdr ? 'XDR generated' : 'Error');
+  } catch (error) {
+    console.error('❌ Error in role management:', error);
+  }
+}
+
+/**
+ * Fee management examples
+ */
+async function feeManagementExamples(sdk: DefindexSDK, vaultAddress: string): Promise<void> {
+  console.log('💰 Simulating fee management...');
+  
+  try {
+    // Lock fees with new rate
+    console.log('🔒 Simulating fee lock with new rate...');
+    const lockData: LockFeesParams = {
+      caller: EXAMPLE_ADDRESSES.MANAGER,
+      new_fee_bps: 150 // 1.5%
+    };
+    
+    const lockResponse = await sdk.lockVaultFees(vaultAddress, lockData, NETWORK);
+    console.log('✅ Fee lock:', lockResponse.xdr ? 'XDR generated' : 'Error');
+    
+    // Release fees from strategy
+    console.log('💸 Simulating fee release...');
+    const releaseData: ReleaseFeesParams = {
+      caller: EXAMPLE_ADDRESSES.MANAGER,
+      strategy_address: EXAMPLE_ADDRESSES.STRATEGY,
+      amount: 100000
+    };
+    
+    const releaseResponse = await sdk.releaseVaultFees(vaultAddress, releaseData, NETWORK);
+    console.log('✅ Fee release:', releaseResponse.xdr ? 'XDR generated' : 'Error');
+    
+    // Distribute accumulated fees
+    console.log('📤 Simulating fee distribution...');
+    const distributeData: DistributeFeesParams = {
+      caller: EXAMPLE_ADDRESSES.MANAGER
+    };
+    
+    const distributeResponse = await sdk.distributeVaultFees(vaultAddress, distributeData, NETWORK);
+    console.log('✅ Fee distribution:', distributeResponse.xdr ? 'XDR generated' : 'Error');
+  } catch (error) {
+    console.error('❌ Error in fee management:', error);
+  }
+}
+
+/**
+ * Upgrade vault WASM example
+ */
+async function upgradeVaultExample(sdk: DefindexSDK, vaultAddress: string): Promise<void> {
+  console.log('🔄 Simulating vault WASM upgrade...');
+  
+  const upgradeData: UpgradeWasmParams = {
+    caller: EXAMPLE_ADDRESSES.MANAGER,
+    new_wasm_hash: 'ae3409a4090bc087b86b4e9b444d2b8017ccd97b90b069d44d005ab9f8e1468b'
+  };
+  
+  try {
+    console.log('📝 Upgrade parameters:', upgradeData);
+    const response = await sdk.upgradeVaultWasm(vaultAddress, upgradeData, NETWORK);
+    
+    console.log('🎉 Upgrade prepared successfully!');
+    console.log('🔗 XDR to sign:', response.xdr);
+    console.log('✅ Vault upgrade simulated');
+  } catch (error) {
+    console.error('❌ Error in vault upgrade:', error);
+  }
 }
 
 /**
@@ -407,7 +577,7 @@ async function sendTransactionExample(sdk: DefindexSDK, signedXDR: string): Prom
     const response = await sdk.sendTransaction(signedXDR, NETWORK, false);
     
     console.log('🎉 Transaction sent successfully!');
-    console.log('🔗 Transaction hash:', response.hash);
+    console.log('🔗 Transaction hash:', response.txHash);
     console.log('✅ Status:', response.status);
     
     if (response.status === 'SUCCESS') {
@@ -438,10 +608,6 @@ function handleError(error: unknown, context: string): void {
  */
 function checkEnvironmentSetup(): void {
   console.log('🔍 Checking environment configuration...');
-  
-  const requiredVars = [
-    'DEFINDEX_API_KEY'
-  ];
   
   const hasApiKey = !!process.env.DEFINDEX_API_KEY;
   
