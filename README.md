@@ -1,4 +1,7 @@
 # DeFindex SDK
+[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/defindex/sdk)
+[![npm version](https://img.shields.io/npm/v/@defindex/sdk)](https://www.npmjs.com/package/@defindex/sdk)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 Official TypeScript SDK for [DeFindex](https://defindex.io) - A decentralized vault management system built on Stellar using Soroban smart contracts.
 
