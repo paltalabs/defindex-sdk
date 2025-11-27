@@ -62,7 +62,8 @@ describe('DefindexSDK - Unit Tests', () => {
       const customConfig = {
         baseUrl: 'https://custom.api.com',
         apiKey: 'test-api-key',
-        timeout: 60000
+        timeout: 60000,
+        defaultNetwork: SupportedNetworks.TESTNET
       };
       sdk = new DefindexSDK(customConfig);
       expect((sdk as any).config.baseUrl).toBe(customConfig.baseUrl);
@@ -105,7 +106,7 @@ describe('DefindexSDK - Unit Tests', () => {
 
   describe('Factory Operations', () => {
     beforeEach(() => {
-      sdk = new DefindexSDK({ baseUrl: 'https://api.defindex.io' });
+      sdk = new DefindexSDK({ baseUrl: 'https://api.defindex.io', defaultNetwork: SupportedNetworks.TESTNET, });
       mockHttpClient = (sdk as any).httpClient;
     });
 
@@ -124,7 +125,7 @@ describe('DefindexSDK - Unit Tests', () => {
     });
 
     it('should get factory address for mainnet', async () => {
-      const mockResponse = { 
+      const mockResponse = {
         address: 'CDFACTORY123456789012345678901234567890123456789012345678',
         network: 'mainnet'
       };
@@ -392,6 +393,11 @@ describe('DefindexSDK - Unit Tests', () => {
   describe('Vault Management', () => {
     const vaultAddress = 'VAULT_ADDRESS';
 
+    beforeEach(() => {
+      sdk = new DefindexSDK({ baseUrl: 'https://api.defindex.io' });
+      mockHttpClient = (sdk as any).httpClient;
+    });
+
     it('should prepare a transaction to perform an emergency rescue', async () => {
       const rescueData: RescueFromVaultParams = { strategy_address: 'strategy_addr', caller: 'manager_addr' };
       const mockResponse = { xdr: 'rescue_xdr' };
@@ -446,11 +452,16 @@ describe('DefindexSDK - Unit Tests', () => {
   describe('Role Operations', () => {
     const vaultAddress = 'VAULT_ADDRESS';
 
+    beforeEach(() => {
+      sdk = new DefindexSDK({ baseUrl: 'https://api.defindex.io' });
+      mockHttpClient = (sdk as any).httpClient;
+    });
+
     it('should get vault role', async () => {
       const mockResponse = { function_called: 'get_manager', address: 'manager_address' };
       mockHttpClient.get.mockResolvedValue(mockResponse);
 
-      const result = await sdk.getVaultRole(vaultAddress, SupportedNetworks.TESTNET, VaultRoles.MANAGER);
+      const result = await sdk.getVaultRole(vaultAddress, VaultRoles.MANAGER, SupportedNetworks.TESTNET);
 
       expect(result).toEqual(mockResponse);
       expect(mockHttpClient.get).toHaveBeenCalledWith(`/vault/${vaultAddress}/get/${VaultRoles.MANAGER}?network=testnet`);
@@ -470,6 +481,11 @@ describe('DefindexSDK - Unit Tests', () => {
 
   describe('Fee Management Operations', () => {
     const vaultAddress = 'VAULT_ADDRESS';
+
+    beforeEach(() => {
+      sdk = new DefindexSDK({ baseUrl: 'https://api.defindex.io' });
+      mockHttpClient = (sdk as any).httpClient;
+    });
 
     it('should prepare a transaction to lock vault fees', async () => {
       const lockData: LockFeesParams = { caller: 'manager_addr', new_fee_bps: 150 };
@@ -508,6 +524,11 @@ describe('DefindexSDK - Unit Tests', () => {
   describe('Vault Upgrade Operations', () => {
     const vaultAddress = 'VAULT_ADDRESS';
 
+    beforeEach(() => {
+      sdk = new DefindexSDK({ baseUrl: 'https://api.defindex.io' });
+      mockHttpClient = (sdk as any).httpClient;
+    });
+
     it('should prepare a transaction to upgrade vault WASM', async () => {
       const upgradeData: UpgradeWasmParams = { caller: 'manager_addr', new_wasm_hash: 'abcd1234567890abcdef' };
       const mockResponse = { xdr: 'upgrade_wasm_xdr' };
@@ -521,6 +542,11 @@ describe('DefindexSDK - Unit Tests', () => {
   });
 
   describe('Transaction Operations', () => {
+    beforeEach(() => {
+      sdk = new DefindexSDK({ baseUrl: 'https://api.defindex.io' });
+      mockHttpClient = (sdk as any).httpClient;
+    });
+
     it('should send a transaction', async () => {
       const xdr = 'signed_xdr_string';
       const mockResponse = { hash: 'tx_hash', status: 'SUCCESS' };
