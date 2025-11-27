@@ -33,14 +33,14 @@ const API_BASE_URL = process.env.DEFINDEX_API_URL || 'https://api.defindex.io';
 
 // Example addresses for Testnet (replace with real addresses)
 const EXAMPLE_ADDRESSES = {
-  MANAGER: 'GCURWTJWQJ7CCWIBSMEJKVMJJKDK6QAARAD3JQ6GLTON7MQYBSFFQZWI',
-  FEE_RECEIVER: 'GCURWTJWQJ7CCWIBSMEJKVMJJKDK6QAARAD3JQ6GLTON7MQYBSFFQZWI',
-  EMERGENCY_MANAGER: 'GCURWTJWQJ7CCWIBSMEJKVMJJKDK6QAARAD3JQ6GLTON7MQYBSFFQZWI',
-  REBALANCE_MANAGER: 'GCURWTJWQJ7CCWIBSMEJKVMJJKDK6QAARAD3JQ6GLTON7MQYBSFFQZWI',
-  USER: 'GCURWTJWQJ7CCWIBSMEJKVMJJKDK6QAARAD3JQ6GLTON7MQYBSFFQZWI',
+  MANAGER: 'GBZXUKUYGXLASTLIXGIV2RJGWQHVRIS7AANR7AHXFPA67LNSAGO6WPPE',
+  FEE_RECEIVER: 'GBZXUKUYGXLASTLIXGIV2RJGWQHVRIS7AANR7AHXFPA67LNSAGO6WPPE',
+  EMERGENCY_MANAGER: 'GBZXUKUYGXLASTLIXGIV2RJGWQHVRIS7AANR7AHXFPA67LNSAGO6WPPE',
+  REBALANCE_MANAGER: 'GBZXUKUYGXLASTLIXGIV2RJGWQHVRIS7AANR7AHXFPA67LNSAGO6WPPE',
+  USER: 'GBAJGSZQRZDMHKU4DAS6FEJM7TYISAME5LNERKOT7XLMNFZ5IF5ROXOQ',
   XLM_ASSET: 'CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC',
-  STRATEGY: 'CBO77JLVAT54YBRHBY4PSITLILWAAXX5JHPXGBFRW2XUFQKXZ3ZLJ7MJ',
-  DEPLOYED_VAULT: 'CAEJL2XKGLSWCPKSVVRYAWLQKE4DS24YCZX53CLUMWGOVEOERSAZH5UM'
+  STRATEGY: 'CCEE2VAGPXKVIZXTVIT4O5B7GCUDTZTJ5RIXBPJSZ7JWJCJ2TLK75WVW',
+  DEPLOYED_VAULT: 'CD3UGELRAQU5OBHUD2SCVKCNVBTWPXICLP2AF3IRSYGGEQCP2DCY27DU'
 };
 
 /**
@@ -492,7 +492,7 @@ async function roleManagementExamples(sdk: DefindexSDK, vaultAddress: string): P
   try {
     // Get current manager
     console.log('📋 Getting current vault manager...');
-    const managerRole = await sdk.getVaultRole(vaultAddress, NETWORK, VaultRoles.MANAGER);
+    const managerRole = await sdk.getVaultRole(vaultAddress, VaultRoles.MANAGER, NETWORK);
     console.log(`   Current manager: ${managerRole.address}`);
     
     // Set new role example (simulated)
@@ -684,14 +684,14 @@ async function testCreateVaultAutoInvest(sdk: DefindexSDK): Promise<void> {
     console.log('📦 Creating vault with auto-invest...');
 
     const params: CreateVaultAutoInvestParams = {
-      caller: EXAMPLE_ADDRESSES.MANAGER,
+      caller: EXAMPLE_ADDRESSES.USER,
       roles: {
         emergencyManager: EXAMPLE_ADDRESSES.EMERGENCY_MANAGER,
         rebalanceManager: EXAMPLE_ADDRESSES.REBALANCE_MANAGER,
         feeReceiver: EXAMPLE_ADDRESSES.FEE_RECEIVER,
         manager: EXAMPLE_ADDRESSES.MANAGER
       },
-      name: 'Auto-Invest Vault',
+      name: 'Auto-Invest',
       symbol: 'AIV',
       vaultFee: 100, // 1% fee in basis points
       upgradable: true,
@@ -719,6 +719,7 @@ async function testCreateVaultAutoInvest(sdk: DefindexSDK): Promise<void> {
         console.log('   ⚠️ Warning:', response.warning);
       }
     }
+    console.log(response.xdr);
 
     console.log('');
     console.log('📊 Test Summary:');
