@@ -2,6 +2,8 @@ import { HttpClient } from './clients/http-client';
 import {
   CreateDefindexVault,
   CreateDefindexVaultDepositDto,
+  CreateVaultAutoInvestParams,
+  CreateVaultAutoInvestResponse,
   CreateVaultDepositResponse,
   CreateVaultResponse,
   DepositToVaultParams,
@@ -206,6 +208,59 @@ export class DefindexSDK {
     return this.httpClient.post<CreateVaultDepositResponse>(
       `/factory/create-vault-deposit?network=${resolvedNetwork}`,
       vaultConfig,
+    );
+  }
+
+  /**
+   * Create a new vault with auto-invest in a single atomic transaction
+   *
+   * This endpoint creates a batched transaction that:
+   * 1. Creates the vault with initial deposit
+   * 2. Invests funds in specified strategies (rebalance)
+   * 3. Changes manager to the final address
+   *
+   * All operations are atomic - either all succeed or all fail.
+   *
+   * @param params - Auto-invest vault configuration with asset allocations and strategies
+   * @param network - Stellar network (optional, uses default if not specified)
+   * @returns Transaction XDR, predicted vault address, and warning about address prediction
+   * @example
+   * ```typescript
+   * const params = {
+   *   caller: 'GCALLER...',
+   *   roles: {
+   *     emergencyManager: 'GEMERGENCY...',
+   *     rebalanceManager: 'GREBALANCE...',
+   *     feeReceiver: 'GFEE...',
+   *     manager: 'GMANAGER...'
+   *   },
+   *   name: 'My Auto-Invest Vault',
+   *   symbol: 'MAIV',
+   *   vaultFee: 10, // 0.1% in basis points
+   *   upgradable: true,
+   *   assets: [{
+   *     address: 'CASSET...',
+   *     symbol: 'XLM',
+   *     amount: 2000000000, // 200 XLM in stroops
+   *     strategies: [
+   *       { address: 'CSTRAT1...', name: 'hodl_strategy', amount: 1000000000 },
+   *       { address: 'CSTRAT2...', name: 'yield_strategy', amount: 1000000000 }
+   *     ]
+   *   }]
+   * };
+   * const response = await sdk.createVaultAutoInvest(params);
+   * console.log('Sign this XDR:', response.xdr);
+   * console.log('Predicted vault address:', response.predictedVaultAddress);
+   * ```
+   */
+  public async createVaultAutoInvest(
+    params: CreateVaultAutoInvestParams,
+    network?: SupportedNetworks,
+  ): Promise<CreateVaultAutoInvestResponse> {
+    const resolvedNetwork = this.getNetwork(network);
+    return this.httpClient.post<CreateVaultAutoInvestResponse>(
+      `/factory/create-vault-auto-invest?network=${resolvedNetwork}`,
+      params,
     );
   }
 
