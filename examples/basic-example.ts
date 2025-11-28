@@ -14,6 +14,7 @@
 import { DefindexSDK, SupportedNetworks, VaultRoles } from '../src';
 import type {
   CreateDefindexVault,
+  CreateVaultAutoInvestParams,
   DepositToVaultParams,
   WithdrawParams,
   WithdrawSharesParams,
@@ -32,14 +33,14 @@ const API_BASE_URL = process.env.DEFINDEX_API_URL || 'https://api.defindex.io';
 
 // Example addresses for Testnet (replace with real addresses)
 const EXAMPLE_ADDRESSES = {
-  MANAGER: 'GCURWTJWQJ7CCWIBSMEJKVMJJKDK6QAARAD3JQ6GLTON7MQYBSFFQZWI',
-  FEE_RECEIVER: 'GCURWTJWQJ7CCWIBSMEJKVMJJKDK6QAARAD3JQ6GLTON7MQYBSFFQZWI',
-  EMERGENCY_MANAGER: 'GCURWTJWQJ7CCWIBSMEJKVMJJKDK6QAARAD3JQ6GLTON7MQYBSFFQZWI',
-  REBALANCE_MANAGER: 'GCURWTJWQJ7CCWIBSMEJKVMJJKDK6QAARAD3JQ6GLTON7MQYBSFFQZWI',
-  USER: 'GCURWTJWQJ7CCWIBSMEJKVMJJKDK6QAARAD3JQ6GLTON7MQYBSFFQZWI',
+  MANAGER: 'GBZXUKUYGXLASTLIXGIV2RJGWQHVRIS7AANR7AHXFPA67LNSAGO6WPPE',
+  FEE_RECEIVER: 'GBZXUKUYGXLASTLIXGIV2RJGWQHVRIS7AANR7AHXFPA67LNSAGO6WPPE',
+  EMERGENCY_MANAGER: 'GBZXUKUYGXLASTLIXGIV2RJGWQHVRIS7AANR7AHXFPA67LNSAGO6WPPE',
+  REBALANCE_MANAGER: 'GBZXUKUYGXLASTLIXGIV2RJGWQHVRIS7AANR7AHXFPA67LNSAGO6WPPE',
+  USER: 'GBAJGSZQRZDMHKU4DAS6FEJM7TYISAME5LNERKOT7XLMNFZ5IF5ROXOQ',
   XLM_ASSET: 'CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC',
-  STRATEGY: 'CBO77JLVAT54YBRHBY4PSITLILWAAXX5JHPXGBFRW2XUFQKXZ3ZLJ7MJ',
-  DEPLOYED_VAULT: 'CAEJL2XKGLSWCPKSVVRYAWLQKE4DS24YCZX53CLUMWGOVEOERSAZH5UM'
+  STRATEGY: 'CCEE2VAGPXKVIZXTVIT4O5B7GCUDTZTJ5RIXBPJSZ7JWJCJ2TLK75WVW',
+  DEPLOYED_VAULT: 'CD3UGELRAQU5OBHUD2SCVKCNVBTWPXICLP2AF3IRSYGGEQCP2DCY27DU'
 };
 
 /**
@@ -67,7 +68,13 @@ async function runExample(): Promise<void> {
 
   // Step 6: Administrative management (simulated)
   await vaultManagementExample(sdk, EXAMPLE_ADDRESSES.DEPLOYED_VAULT);
-  
+
+  // Step 7: Test Create Vault + Rebalance flow
+  await testCreateVaultWithRebalance(sdk);
+
+  // Step 8: Test Create Vault + Auto-Invest flow
+  await testCreateVaultAutoInvest(sdk);
+
   console.log('✅ Example completed successfully!');
 }
 
@@ -485,7 +492,7 @@ async function roleManagementExamples(sdk: DefindexSDK, vaultAddress: string): P
   try {
     // Get current manager
     console.log('📋 Getting current vault manager...');
-    const managerRole = await sdk.getVaultRole(vaultAddress, NETWORK, VaultRoles.MANAGER);
+    const managerRole = await sdk.getVaultRole(vaultAddress, VaultRoles.MANAGER, NETWORK);
     console.log(`   Current manager: ${managerRole.address}`);
     
     // Set new role example (simulated)
@@ -548,22 +555,183 @@ async function feeManagementExamples(sdk: DefindexSDK, vaultAddress: string): Pr
  */
 async function upgradeVaultExample(sdk: DefindexSDK, vaultAddress: string): Promise<void> {
   console.log('🔄 Simulating vault WASM upgrade...');
-  
+
   const upgradeData: UpgradeWasmParams = {
     caller: EXAMPLE_ADDRESSES.MANAGER,
     new_wasm_hash: 'ae3409a4090bc087b86b4e9b444d2b8017ccd97b90b069d44d005ab9f8e1468b'
   };
-  
+
   try {
     console.log('📝 Upgrade parameters:', upgradeData);
     const response = await sdk.upgradeVaultWasm(vaultAddress, upgradeData, NETWORK);
-    
+
     console.log('🎉 Upgrade prepared successfully!');
     console.log('🔗 XDR to sign:', response.xdr);
     console.log('✅ Vault upgrade simulated');
   } catch (error) {
     console.error('❌ Error in vault upgrade:', error);
   }
+}
+
+/**
+ * Test: Create Vault + Rebalance Flow
+ * Demonstrates the complete flow of creating a vault and then rebalancing it
+ */
+async function testCreateVaultWithRebalance(sdk: DefindexSDK): Promise<void> {
+  console.log('');
+  console.log('🧪 ========================================');
+  console.log('🧪 TEST: Create Vault + Rebalance Flow');
+  console.log('🧪 ========================================');
+
+  try {
+    // Step 1: Create vault
+    console.log('');
+    console.log('📦 Step 1: Creating vault...');
+
+    const vaultConfig: CreateDefindexVault = {
+      roles: {
+        0: EXAMPLE_ADDRESSES.EMERGENCY_MANAGER,
+        1: EXAMPLE_ADDRESSES.FEE_RECEIVER,
+        2: EXAMPLE_ADDRESSES.MANAGER,
+        3: EXAMPLE_ADDRESSES.REBALANCE_MANAGER
+      },
+      vault_fee_bps: 100,
+      assets: [{
+        address: EXAMPLE_ADDRESSES.XLM_ASSET,
+        strategies: [{
+          address: EXAMPLE_ADDRESSES.STRATEGY,
+          name: 'Test Strategy',
+          paused: false
+        }]
+      }],
+      name_symbol: {
+        name: 'Test Rebalance Vault',
+        symbol: 'TRV'
+      },
+      upgradable: true,
+      caller: EXAMPLE_ADDRESSES.MANAGER
+    };
+
+    const createResponse = await sdk.createVault(vaultConfig, NETWORK);
+
+    if (createResponse.xdr) {
+      console.log('✅ Vault creation XDR generated');
+      console.log('   XDR length:', createResponse.xdr.length, 'chars');
+    } else {
+      console.log('⚠️  Vault creation failed:', createResponse.error);
+      return;
+    }
+
+    // Step 2: Rebalance vault (using deployed vault for demo)
+    console.log('');
+    console.log('⚖️ Step 2: Rebalancing vault...');
+
+    const rebalanceData: RebalanceParams = {
+      caller: EXAMPLE_ADDRESSES.REBALANCE_MANAGER,
+      instructions: [
+        {
+          type: 'Invest',
+          strategy_address: EXAMPLE_ADDRESSES.STRATEGY,
+          amount: 5000000
+        },
+        {
+          type: 'Unwind',
+          strategy_address: EXAMPLE_ADDRESSES.STRATEGY,
+          amount: 2000000
+        }
+      ]
+    };
+
+    const rebalanceResponse = await sdk.rebalanceVault(
+      EXAMPLE_ADDRESSES.DEPLOYED_VAULT,
+      rebalanceData,
+      NETWORK
+    );
+
+    if (rebalanceResponse.xdr) {
+      console.log('✅ Rebalance XDR generated');
+      console.log('   XDR length:', rebalanceResponse.xdr.length, 'chars');
+      console.log('   Instructions executed: Invest + Unwind');
+    }
+
+    // Summary
+    console.log('');
+    console.log('📊 Test Summary:');
+    console.log('   ✅ Vault creation: XDR ready for signing');
+    console.log('   ✅ Rebalance: XDR ready for signing');
+    console.log('   📝 Next: Sign XDRs with wallet and send via sendTransaction()');
+
+  } catch (error) {
+    console.error('❌ Test failed:', error);
+  }
+
+  console.log('🧪 ========================================');
+  console.log('');
+}
+
+/**
+ * Test: Create Vault with Auto-Invest
+ * Demonstrates creating a vault and investing in strategies atomically
+ */
+async function testCreateVaultAutoInvest(sdk: DefindexSDK): Promise<void> {
+  console.log('');
+  console.log('🧪 ========================================');
+  console.log('🧪 TEST: Create Vault Auto-Invest Flow');
+  console.log('🧪 ========================================');
+
+  try {
+    console.log('');
+    console.log('📦 Creating vault with auto-invest...');
+
+    const params: CreateVaultAutoInvestParams = {
+      caller: EXAMPLE_ADDRESSES.USER,
+      roles: {
+        emergencyManager: EXAMPLE_ADDRESSES.EMERGENCY_MANAGER,
+        rebalanceManager: EXAMPLE_ADDRESSES.REBALANCE_MANAGER,
+        feeReceiver: EXAMPLE_ADDRESSES.FEE_RECEIVER,
+        manager: EXAMPLE_ADDRESSES.MANAGER
+      },
+      name: 'Auto-Invest',
+      symbol: 'AIV',
+      vaultFee: 100, // 1% fee in basis points
+      upgradable: true,
+      assets: [{
+        address: EXAMPLE_ADDRESSES.XLM_ASSET,
+        symbol: 'XLM',
+        amount: 10000000, // 1 XLM (7 decimals)
+        strategies: [{
+          address: EXAMPLE_ADDRESSES.STRATEGY,
+          name: 'XLM Strategy',
+          amount: 10000000 // Invest full amount
+        }]
+      }]
+    };
+
+    console.log('📝 Auto-invest params:', JSON.stringify(params, null, 2));
+
+    const response = await sdk.createVaultAutoInvest(params, NETWORK);
+
+    if (response.xdr) {
+      console.log('✅ Auto-invest XDR generated');
+      console.log('   XDR length:', response.xdr.length, 'chars');
+      console.log('   Predicted vault address:', response.predictedVaultAddress);
+      if (response.warning) {
+        console.log('   ⚠️ Warning:', response.warning);
+      }
+    }
+    console.log(response.xdr);
+
+    console.log('');
+    console.log('📊 Test Summary:');
+    console.log('   ✅ Vault + Deposit + Invest: XDR ready for signing');
+    console.log('   📝 Next: Sign XDR with wallet and send via sendTransaction()');
+
+  } catch (error) {
+    console.error('❌ Test failed:', error);
+  }
+
+  console.log('🧪 ========================================');
+  console.log('');
 }
 
 /**

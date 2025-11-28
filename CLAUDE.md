@@ -35,12 +35,45 @@ This is the official TypeScript SDK for DeFindex - a decentralized vault managem
 - **HttpClient** (`src/clients/http-client.ts`) - Centralized HTTP client with Bearer token authentication
 
 ### API Operations
-The SDK provides methods organized into key areas (✅ = Working, ❌ = Not Available):
-- **System**: healthCheck() - API health monitoring (✅ Working)
-- **Factory Operations**: getFactoryAddress(), createVault(), createVaultWithDeposit() - Vault creation and deployment (✅ Fully operational)
-- **Vault Operations**: getVaultInfo(), depositToVault(), withdrawFromVault(), withdrawShares(), getVaultBalance(), getVaultAPY() (✅ All working)
-- **Vault Management**: emergencyRescue(), pauseStrategy(), unpauseStrategy() - Admin operations for vault managers (✅ All working)
-- **Transaction Management**: sendTransaction() - Submit signed transactions to Stellar network (✅ Working perfectly)
+The SDK provides methods organized into the following categories:
+
+**System Operations:**
+- `healthCheck()` - API health monitoring
+
+**Factory Operations:**
+- `getFactoryAddress()` - Get factory contract address
+- `createVault()` - Create a new vault
+- `createVaultWithDeposit()` - Create vault with initial deposit
+
+**Vault Operations:**
+- `getVaultInfo()` - Get comprehensive vault information
+- `getVaultBalance()` - Get user's vault balance and shares
+- `getReport()` - Get vault report with transaction details
+- `depositToVault()` - Deposit assets into vault
+- `withdrawFromVault()` - Withdraw specific amounts
+- `withdrawShares()` - Withdraw by shares
+- `getVaultAPY()` - Get vault APY
+
+**Vault Management (Admin):**
+- `rebalanceVault()` - Rebalance vault strategies (Rebalance Manager)
+- `emergencyRescue()` - Emergency asset rescue (Emergency Manager)
+- `pauseStrategy()` - Pause a strategy (Manager)
+- `unpauseStrategy()` - Unpause a strategy (Manager)
+
+**Role Operations:**
+- `getVaultRole()` - Get address for a specific role
+- `setVaultRole()` - Assign new address to a role (Manager)
+
+**Fee Management:**
+- `lockVaultFees()` - Lock fees and optionally update fee rate (Manager)
+- `releaseVaultFees()` - Release fees from a strategy (Manager)
+- `distributeVaultFees()` - Distribute accumulated fees (Manager)
+
+**Contract Management:**
+- `upgradeVaultWasm()` - Upgrade vault WASM contract (Manager)
+
+**Transaction Operations:**
+- `sendTransaction()` - Submit signed transactions (supports LaunchTube)
 
 ### Authentication Flow
 1. SDK initializes with API key for automatic authentication
@@ -50,11 +83,10 @@ The SDK provides methods organized into key areas (✅ = Working, ❌ = Not Avai
 
 ### Type System
 Comprehensive TypeScript types are defined in `src/types/`:
-- `base.types.ts` - Core enums (SupportedNetworks) and base interfaces
+- `base.types.ts` - Core enums (SupportedNetworks) and BaseVaultTransactionResponse
 - `factory.types.ts` - Vault factory configuration and response types
-- `vault.types.ts` - Vault operations, deposits, withdrawals, and management types
+- `vault.types.ts` - Vault operations, roles (VaultRoles enum), fees, instructions, and management types
 - `stellar.types.ts` - Transaction and blockchain interaction types
-- `error.types.ts` - Error handling and validation types
 - `network.types.ts` - Network configuration types
 - `index.ts` - Main type exports
 
@@ -156,61 +188,32 @@ The SDK accepts a `DefindexSDKConfig` object including:
 - Network timeouts should be configurable and well-documented
 
 ### Vault Management Roles
-The SDK supports different operational roles:
-- **Vault Managers**: Can create and configure vaults
-- **Emergency Managers**: Can execute emergency rescues
-- **Strategy Managers**: Can pause/unpause individual strategies
-- **Regular Users**: Can deposit, withdraw, and view vault information
+The SDK supports four operational roles defined in `VaultRoles` enum:
+- **Manager**: Full vault control - can configure vault, assign roles, pause/unpause strategies, manage fees, and upgrade contracts
+- **Emergency Manager**: Can execute emergency rescues to withdraw assets from strategies
+- **Rebalance Manager**: Can rebalance vault strategies (invest, unwind, swap operations)
+- **Fee Receiver**: Receives distributed vault fees
 
-## Migration Context
-
-This SDK has been migrated from a Soroswap-based implementation to DeFindex. Key differences:
-- Authentication exclusively uses API keys for secure server-side access
-- Vault-focused operations instead of DEX/trading operations
-- Factory pattern for vault creation with role-based management
-- Administrative functions for vault management (pause/unpause, emergency rescue)
-- Network parameter handling per operation instead of global configuration
-- Comprehensive type safety for all vault operations and responses
+Regular users can deposit, withdraw, and view vault information without special roles.
 
 ## Current Project Status
 
-### ✅ All Features Working!
-The DeFindex SDK is now fully operational with complete API functionality:
+The DeFindex SDK is fully operational with complete API functionality:
 
-- ✅ SDK initialization and configuration
-- ✅ API key authentication
-- ✅ Health check endpoint working perfectly
-- ✅ Factory contract deployed on testnet (address: `CCJDRCK7VBZV6KEJ433F2KXNELEGAAXYMQWFG6JGLVYATJ4SDEYLRWMD`)
-- ✅ Complete vault creation and management endpoints
-- ✅ All vault operations (deposit, withdraw, balance, APY)
-- ✅ Administrative operations (pause/unpause strategies, emergency rescue)
-- ✅ HTTP client with proper error handling
-- ✅ TypeScript type definitions
-- ✅ Unit tests and test coverage
-- ✅ Integration tests working against live API
-- ✅ Complete functional example (`examples/basic-example.ts`)
-
-### Recent Updates
-- ✅ Factory successfully deployed on testnet
-- ✅ All vault operations now functional
-- ✅ Integration tests now consistently passing
-- ✅ Complete working example demonstrating all functionality
-- ✅ Ready for production use
+- SDK initialization, configuration, and API key authentication
+- Factory operations (vault creation with/without initial deposit)
+- Complete vault operations (deposit, withdraw, balance, APY, report)
+- Vault management (rebalance, pause/unpause strategies, emergency rescue)
+- Role management (get/set manager, emergency manager, rebalance manager, fee receiver)
+- Fee management (lock, release, distribute fees)
+- Contract upgrades (WASM upgrades)
+- Transaction submission (direct and via LaunchTube)
+- Full TypeScript type safety
+- Unit and integration test coverage
 
 ### Example Usage
-Run the complete example to see all working functionality:
 ```bash
 cp .env.example .env
 # Edit .env with your API key: DEFINDEX_API_KEY=sk_your_api_key_here
 pnpm run example
 ```
-
-The example now successfully demonstrates:
-- Health check verification
-- Factory address retrieval
-- Vault creation with XDR generation
-- Vault information queries
-- User balance checking
-- Deposit and withdrawal operations
-- Administrative vault management
-- Transaction XDR building for all operations
