@@ -1,23 +1,70 @@
-import { BaseTransactionResponse } from "./base.types";
 import { CreateDefindexVault } from "./vault.types";
 
+/* Factory endpoint response types - Flat interfaces for better DX */
 
-/* Factory endpoint response types */
+/**
+ * Response containing factory contract address
+ */
 export interface FactoryAddressResponse {
   address: string;
 }
 
-export interface CreateVaultResponse extends BaseTransactionResponse {
+/**
+ * Response from creating a vault
+ */
+export interface CreateVaultResponse {
+  /** Transaction XDR to sign */
+  xdr: string | null;
+  /** Simulation result */
+  simulation_result: string;
+  /** Error message if operation failed */
+  error?: string;
+  /** Vault creation parameters used */
   call_params: CreateDefindexVault;
 }
 
-export interface CreateVaultDepositResponse extends BaseTransactionResponse {
+/**
+ * Response from creating a vault with initial deposit
+ */
+export interface CreateVaultDepositResponse {
+  /** Transaction XDR to sign */
+  xdr: string | null;
+  /** Simulation result */
+  simulation_result: string;
+  /** Error message if operation failed */
+  error?: string;
+  /** Vault creation parameters used */
   call_params: CreateDefindexVault;
 }
 
-export interface CreateDefindexVaultDepositDto extends CreateDefindexVault {
+/**
+ * Parameters for creating a vault with initial deposit
+ */
+export interface CreateVaultDepositParams {
+  /** Role assignments (index 0: manager, 1: fee_receiver, etc.) */
+  roles: Record<number, string>;
+  /** Vault fee in basis points (100 = 1%) */
+  vault_fee_bps: number;
+  /** Asset configurations with their strategies */
+  assets: import("./vault.types").AssetStrategySet[];
+  /** Optional Soroswap router address for swaps */
+  soroswap_router?: string;
+  /** Vault name and symbol configuration */
+  name_symbol: Record<string, string>;
+  /** Whether vault is upgradable */
+  upgradable: boolean;
+  /** Caller address creating the vault */
+  caller: string;
+  /** Optional initial amounts (for vault creation without deposit) */
+  amounts?: number[];
+  /** Initial deposit amounts (one per asset, in stroops) */
   deposit_amounts: number[];
 }
+
+/* Deprecated type aliases for backwards compatibility */
+
+/** @deprecated Use CreateVaultDepositParams instead */
+export type CreateDefindexVaultDepositDto = CreateVaultDepositParams;
 
 /* Auto-invest types */
 

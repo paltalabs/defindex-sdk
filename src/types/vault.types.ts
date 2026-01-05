@@ -1,4 +1,4 @@
-import { BaseVaultTransactionResponse } from "./base.types";
+/* Vault types - Using flat interfaces for better developer experience */
 
 /* Core vault creation types */
 export interface AssetStrategySet {
@@ -30,61 +30,147 @@ export interface CreateDefindexVaultResponse {
   error?: string;
 }
 
-/* Base parameter interfaces */
-interface BaseCallerParams {
+/* Vault operation parameters - Flat interfaces for better DX */
+
+/**
+ * Parameters for depositing assets into a vault
+ */
+export interface DepositParams {
+  /** Caller address initiating the deposit */
   caller: string;
+  /** Array of amounts to deposit (one per vault asset, in stroops) */
+  amounts: number[];
+  /** Whether to immediately invest deposited funds into strategies */
+  invest: boolean;
+  /** Optional slippage tolerance in basis points (100 = 1%) */
+  slippageBps?: number;
 }
 
-interface BaseStrategyParams extends BaseCallerParams {
+/**
+ * Parameters for withdrawing specific asset amounts from a vault
+ */
+export interface WithdrawParams {
+  /** Caller address initiating the withdrawal */
+  caller: string;
+  /** Array of amounts to withdraw (one per vault asset, in stroops) */
+  amounts: number[];
+  /** Optional slippage tolerance in basis points (100 = 1%) */
+  slippageBps?: number;
+}
+
+/**
+ * Parameters for withdrawing vault shares
+ */
+export interface WithdrawSharesParams {
+  /** Caller address initiating the withdrawal */
+  caller: string;
+  /** Number of vault shares to withdraw */
+  shares: number;
+  /** Optional slippage tolerance in basis points (100 = 1%) */
+  slippageBps?: number;
+}
+
+/**
+ * Parameters for emergency rescue operation
+ */
+export interface RescueParams {
+  /** Caller address (must be Emergency Manager) */
+  caller: string;
+  /** Strategy address to rescue funds from */
   strategy_address: string;
 }
 
-interface BaseAmountParams extends BaseCallerParams {
-  amounts: number[];
-  slippageBps?: number;
+/**
+ * Parameters for pausing a strategy
+ */
+export interface PauseStrategyParams {
+  /** Caller address (must be Manager) */
+  caller: string;
+  /** Strategy address to pause */
+  strategy_address: string;
 }
 
-/* Vault operation parameters */
-export interface DepositToVaultParams extends BaseAmountParams {
-  invest: boolean;
+/**
+ * Parameters for unpausing a strategy
+ */
+export interface UnpauseStrategyParams {
+  /** Caller address (must be Manager) */
+  caller: string;
+  /** Strategy address to unpause */
+  strategy_address: string;
 }
-
-export interface WithdrawParams extends BaseAmountParams {}
-
-export interface WithdrawSharesParams extends BaseCallerParams {
-  shares: number;
-  slippageBps?: number;
-}
-
-export interface RescueFromVaultParams extends BaseStrategyParams {}
-
-export interface PauseStrategyParams extends BaseStrategyParams {}
-
-export interface UnpauseStrategyParams extends BaseStrategyParams {}
 
 /* Fee management interfaces */
-export interface LockFeesParams extends BaseCallerParams {
+
+/**
+ * Parameters for locking vault fees
+ */
+export interface LockFeesParams {
+  /** Caller address (must be Manager) */
+  caller: string;
+  /** Optional new fee rate in basis points (100 = 1%) */
   new_fee_bps?: number;
 }
 
-export interface ReleaseFeesParams extends BaseStrategyParams {
-  amount: number;
+/**
+ * Parameters for releasing fees from a strategy
+ */
+export interface ReleaseFeesParams {
+  /** Caller address (must be Manager) */
+  caller: string;
+  /** Strategy address to release fees from */
   strategy_address: string;
+  /** Amount of fees to release (in stroops) */
+  amount: number;
 }
 
-export interface DistributeFeesParams extends BaseCallerParams {}
+/**
+ * Parameters for distributing accumulated fees
+ */
+export interface DistributeFeesParams {
+  /** Caller address (must be Manager) */
+  caller: string;
+}
 
 /* Contract management interfaces */
-export interface SetVaultRoleParams extends BaseCallerParams {
+
+/**
+ * Parameters for setting a vault role
+ */
+export interface SetVaultRoleParams {
+  /** Caller address (must be Manager) */
+  caller: string;
+  /** New address to assign to the role */
   new_address: string;
 }
-export interface UpgradeWasmParams extends BaseCallerParams {
+
+/**
+ * Parameters for upgrading vault WASM contract
+ */
+export interface UpgradeWasmParams {
+  /** Caller address (must be Manager) */
+  caller: string;
+  /** New WASM hash to upgrade to */
   new_wasm_hash: string;
 }
 
-export interface RebalanceParams extends BaseCallerParams {
+/**
+ * Parameters for rebalancing vault strategies
+ */
+export interface RebalanceParams {
+  /** Caller address (must be Rebalance Manager) */
+  caller: string;
+  /** Array of rebalance instructions to execute */
   instructions: InstructionParam[];
 }
+
+/* Deprecated type aliases for backwards compatibility */
+
+/** @deprecated Use DepositParams instead */
+export type DepositToVaultParams = DepositParams;
+
+/** @deprecated Use RescueParams instead */
+export type RescueFromVaultParams = RescueParams;
 
 export type Instruction =
   | { type: "Unwind"; strategy_address: string; amount: number }
@@ -160,7 +246,19 @@ export interface VaultBalanceResponse {
   underlyingBalance: number[];
 }
 
-export interface VaultTransactionResponse extends BaseVaultTransactionResponse {}
+/**
+ * Response from vault transaction operations
+ */
+export interface VaultTransactionResponse {
+  /** Transaction XDR to sign */
+  xdr: string;
+  /** Simulation response from Stellar */
+  simulationResponse: unknown;
+  /** Name of the contract function called */
+  functionName: string;
+  /** Parameters passed to the function */
+  params: unknown[];
+}
 
 export interface VaultApyResponse {
   apy: number;
