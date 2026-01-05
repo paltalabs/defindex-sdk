@@ -1,12 +1,12 @@
 import { HttpClient } from './clients/http-client';
 import {
   CreateDefindexVault,
-  CreateDefindexVaultDepositDto,
+  CreateVaultDepositParams,
   CreateVaultAutoInvestParams,
   CreateVaultAutoInvestResponse,
   CreateVaultDepositResponse,
   CreateVaultResponse,
-  DepositToVaultParams,
+  DepositParams,
   DistributeFeesParams,
   FactoryAddressResponse,
   LaunchTubeResponse,
@@ -14,7 +14,7 @@ import {
   PauseStrategyParams,
   RebalanceParams,
   ReleaseFeesParams,
-  RescueFromVaultParams,
+  RescueParams,
   SendTransactionResponse,
   SetVaultRoleParams,
   SupportedNetworks,
@@ -201,7 +201,7 @@ export class DefindexSDK {
    * ```
    */
   public async createVaultWithDeposit(
-    vaultConfig: CreateDefindexVaultDepositDto,
+    vaultConfig: CreateVaultDepositParams,
     network?: SupportedNetworks,
   ): Promise<CreateVaultDepositResponse> {
     const resolvedNetwork = this.getNetwork(network);
@@ -344,7 +344,7 @@ export class DefindexSDK {
    */
   public async depositToVault(
     vaultAddress: string,
-    depositData: DepositToVaultParams,
+    depositData: DepositParams,
     network?: SupportedNetworks,
   ): Promise<VaultTransactionResponse> {
     const resolvedNetwork = this.getNetwork(network);
@@ -480,7 +480,7 @@ export class DefindexSDK {
    */
   public async emergencyRescue(
     vaultAddress: string,
-    rescueData: RescueFromVaultParams,
+    rescueData: RescueParams,
     network?: SupportedNetworks,
   ): Promise<VaultTransactionResponse> {
     const resolvedNetwork = this.getNetwork(network);

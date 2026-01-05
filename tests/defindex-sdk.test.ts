@@ -1,10 +1,10 @@
 import { DefindexSDK } from '../src';
 import {
   CreateDefindexVault,
-  CreateDefindexVaultDepositDto,
-  DepositToVaultParams,
+  CreateVaultDepositParams,
+  DepositParams,
   PauseStrategyParams,
-  RescueFromVaultParams,
+  RescueParams,
   SupportedNetworks,
   UnpauseStrategyParams,
   WithdrawParams,
@@ -198,18 +198,18 @@ describe('DefindexSDK - Unit Tests', () => {
     });
 
     it('should prepare a create a vault transaction with initial deposit', async () => {
-      const vaultConfig: CreateDefindexVaultDepositDto = { 
-        roles: { 
+      const vaultConfig: CreateVaultDepositParams = {
+        roles: {
           0: 'GMANAGER1234567890123456789012345678901234567890123456',
           1: 'GFEE12345678901234567890123456789012345678901234567890'
-        }, 
-        vault_fee_bps: 100, 
+        },
+        vault_fee_bps: 100,
         assets: [{
           address: 'CASSET1234567890123456789012345678901234567890123456',
           strategies: []
-        }], 
-        name_symbol: { name: 'Test Vault', symbol: 'TVT' }, 
-        upgradable: true, 
+        }],
+        name_symbol: { name: 'Test Vault', symbol: 'TVT' },
+        upgradable: true,
         caller: 'GCALLER123456789012345678901234567890123456789012345',
         deposit_amounts: [1000000, 2000000] // 1 and 2 tokens with 6 decimals
       };
@@ -310,7 +310,7 @@ describe('DefindexSDK - Unit Tests', () => {
     });
 
     it('should prepare a transaction to deposit to vault with valid parameters', async () => {
-      const depositData: DepositToVaultParams = { 
+      const depositData: DepositParams = {
         amounts: [10000000, 20000000], // 1 and 2 tokens (7 decimals)
         caller: 'GUSER1234567890123456789012345678901234567890123456789',
         invest: true,
@@ -333,11 +333,11 @@ describe('DefindexSDK - Unit Tests', () => {
     });
 
     it('should validate deposit parameters', async () => {
-      const invalidDepositData = { 
+      const invalidDepositData = {
         amounts: [-1000000], // Negative amount should fail
         caller: 'invalid_address',
         invest: true
-      } as DepositToVaultParams;
+      } as DepositParams;
 
       const mockError = new Error('Invalid deposit amount');
       mockHttpClient.post.mockRejectedValue(mockError);
@@ -399,7 +399,7 @@ describe('DefindexSDK - Unit Tests', () => {
     });
 
     it('should prepare a transaction to perform an emergency rescue', async () => {
-      const rescueData: RescueFromVaultParams = { strategy_address: 'strategy_addr', caller: 'manager_addr' };
+      const rescueData: RescueParams = { strategy_address: 'strategy_addr', caller: 'manager_addr' };
       const mockResponse = { xdr: 'rescue_xdr' };
       mockHttpClient.post.mockResolvedValue(mockResponse);
 
@@ -620,7 +620,7 @@ describe('DefindexSDK - Unit Tests', () => {
 
     it('should validate XDR format in transaction responses', async () => {
       const vaultAddress = 'CVAULT123456789012345678901234567890123456789012345';
-      const depositData: DepositToVaultParams = {
+      const depositData: DepositParams = {
         amounts: [1000000],
         caller: 'GUSER1234567890123456789012345678901234567890123456789',
         invest: true
@@ -683,7 +683,7 @@ describe('DefindexSDK - Unit Tests', () => {
     });
 
     it('should handle large numerical values correctly', async () => {
-      const largeAmountData: DepositToVaultParams = {
+      const largeAmountData: DepositParams = {
         amounts: [Number.MAX_SAFE_INTEGER], // Very large amount
         caller: 'GUSER1234567890123456789012345678901234567890123456789',
         invest: true
