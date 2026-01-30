@@ -5,8 +5,10 @@ export interface BaseTransactionResponse {
 }
 
 export interface BaseVaultTransactionResponse {
-  xdr: string;
+  xdr: string | null;
   simulationResponse: any;
   functionName: string;
   params: any[];
+  operationXDR?: string;
+  isSmartWallet?: boolean;
 }
