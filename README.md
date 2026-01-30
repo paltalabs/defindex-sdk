@@ -58,7 +58,7 @@ const depositResponse = await sdk.depositToVault(vaultAddress, {
 
 // Sign the XDR with your wallet and submit
 const signedXdr = await yourWallet.sign(depositResponse.xdr);
-const result = await sdk.sendTransaction(signedXdr, SupportedNetworks.TESTNET, false);
+const result = await sdk.sendTransaction(signedXdr, SupportedNetworks.TESTNET);
 ```
 
 ## 🚀 Running the Example
@@ -262,18 +262,10 @@ await sdk.unpauseStrategy(vaultAddress, {
 
 #### Send Transaction
 ```typescript
-// Submit via Stellar directly
+// Submit signed transaction to the Stellar network
 const response = await sdk.sendTransaction(
-  signedXDR, 
-  SupportedNetworks.TESTNET,
-  false // Don't use LaunchTube
-);
-
-// Submit via LaunchTube (faster, more reliable)
-const response = await sdk.sendTransaction(
-  signedXDR, 
-  SupportedNetworks.TESTNET,
-  true // Use LaunchTube
+  signedXDR,
+  SupportedNetworks.TESTNET
 );
 ```
 

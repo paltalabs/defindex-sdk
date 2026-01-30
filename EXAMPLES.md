@@ -436,38 +436,20 @@ import { SupportedNetworks } from '@defindex/sdk';
 const signedXDR = 'AAAA...'; // Your signed transaction XDR
 
 try {
-  // Submit via Stellar directly
+  // Submit signed transaction to the Stellar network
   const response = await sdk.sendTransaction(
-    signedXDR, 
-    SupportedNetworks.TESTNET,
-    false // Don't use LaunchTube
+    signedXDR,
+    SupportedNetworks.TESTNET
   );
-  
+
   console.log('Transaction hash:', response.hash);
   console.log('Transaction status:', response.status);
-  
+
   if (response.status === 'SUCCESS') {
     console.log('Transaction confirmed!');
   }
 } catch (error) {
   console.error('Transaction submission failed:', error.message);
-}
-```
-
-### Submit Transaction via LaunchTube
-
-```typescript
-try {
-  // Submit via LaunchTube service (faster, more reliable)
-  const response = await sdk.sendTransaction(
-    signedXDR, 
-    SupportedNetworks.TESTNET,
-    true // Use LaunchTube
-  );
-  
-  console.log('LaunchTube response:', response);
-} catch (error) {
-  console.error('LaunchTube submission failed:', error.message);
 }
 ```
 

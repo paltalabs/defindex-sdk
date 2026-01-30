@@ -230,8 +230,7 @@ describe("DefindexSDK - Integration Tests", () => {
       try {
         const result = await sdk.sendTransaction(
           testXDR,
-          SupportedNetworks.TESTNET,
-          false // Don't use LaunchTube
+          SupportedNetworks.TESTNET
         );
 
         expect(result).toBeDefined();

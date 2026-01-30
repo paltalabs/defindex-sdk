@@ -555,18 +555,7 @@ describe('DefindexSDK - Unit Tests', () => {
       const result = await sdk.sendTransaction(xdr, SupportedNetworks.TESTNET);
 
       expect(result).toEqual(mockResponse);
-      expect(mockHttpClient.post).toHaveBeenCalledWith('/send?network=testnet', { xdr, launchtube: false });
-    });
-
-    it('should send a transaction with launchtube enabled', async () => {
-      const xdr = 'signed_xdr_string';
-      const mockResponse = { hash: 'tx_hash', status: 'SUCCESS' };
-      mockHttpClient.post.mockResolvedValue(mockResponse);
-
-      const result = await sdk.sendTransaction(xdr, SupportedNetworks.TESTNET, true);
-
-      expect(result).toEqual(mockResponse);
-      expect(mockHttpClient.post).toHaveBeenCalledWith('/send?network=testnet', { xdr, launchtube: true });
+      expect(mockHttpClient.post).toHaveBeenCalledWith('/send?network=testnet', { xdr });
     });
   });
 
