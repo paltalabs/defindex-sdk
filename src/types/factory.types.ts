@@ -86,8 +86,8 @@ export interface CreateVaultAutoInvestParams {
  * Response from creating a vault with auto-invest
  */
 export interface CreateVaultAutoInvestResponse {
-  /** Transaction XDR to sign and submit */
-  xdr: string;
+  /** Transaction XDR to sign and submit (null for smart wallets) */
+  xdr: string | null;
   /**
    * Predicted vault address from simulation.
    * Note: actual address may differ if network state changes between simulation and execution.
@@ -95,4 +95,8 @@ export interface CreateVaultAutoInvestResponse {
   predictedVaultAddress: string;
   /** Warning about address prediction reliability */
   warning?: string;
+  /** Raw operation XDR for building custom transactions (useful for smart wallet flows) */
+  operationXDR?: string;
+  /** Whether the caller is a smart wallet (C-address) */
+  isSmartWallet?: boolean;
 }

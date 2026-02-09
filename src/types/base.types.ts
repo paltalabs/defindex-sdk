@@ -2,6 +2,8 @@ export interface BaseTransactionResponse {
   xdr: string | null;
   simulation_result: string;
   error?: string;
+  operationXDR?: string;
+  isSmartWallet?: boolean;
 }
 
 export interface BaseVaultTransactionResponse {
