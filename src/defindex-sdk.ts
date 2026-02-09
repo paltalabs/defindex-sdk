@@ -9,7 +9,6 @@ import {
   DepositToVaultParams,
   DistributeFeesParams,
   FactoryAddressResponse,
-  LaunchTubeResponse,
   LockFeesParams,
   PauseStrategyParams,
   RebalanceParams,
@@ -721,17 +720,15 @@ export class DefindexSDK {
    * Submit a signed transaction to the Stellar blockchain
    * @param xdr - Base64 encoded signed transaction XDR
    * @param network - Stellar network (optional, uses default if not specified)
-   * @param launchtube - Whether to use LaunchTube service (defaults to false)
    * @returns Transaction response with hash and status
    */
   public async sendTransaction(
     xdr: string,
     network?: SupportedNetworks,
-    launchtube?: boolean,
-  ): Promise<SendTransactionResponse | LaunchTubeResponse> {
+  ): Promise<SendTransactionResponse> {
     const resolvedNetwork = this.getNetwork(network);
-    const payload = { xdr, launchtube: launchtube ?? false };
-    return this.httpClient.post<SendTransactionResponse | LaunchTubeResponse>(
+    const payload = { xdr };
+    return this.httpClient.post<SendTransactionResponse>(
       `/send?network=${resolvedNetwork}`,
       payload,
     );
