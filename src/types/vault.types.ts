@@ -28,6 +28,8 @@ export interface CreateDefindexVaultResponse {
   xdr: string | null;
   simulation_result: string;
   error?: string;
+  operationXDR?: string;
+  isSmartWallet?: boolean;
 }
 
 /* Base parameter interfaces */
