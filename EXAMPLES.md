@@ -109,7 +109,7 @@ try {
   const response = await sdk.createVault(vaultConfig, SupportedNetworks.TESTNET);
   console.log('✅ Vault created successfully!');
   console.log('XDR to sign:', response.xdr);
-  console.log('Simulation result:', response.simulationResult);
+  console.log('Simulation result:', response.simulationResponse);
   
   // Sign the XDR with your wallet and submit using sendTransaction()
   // const result = await sdk.sendTransaction(signedXDR, SupportedNetworks.TESTNET);
@@ -176,7 +176,7 @@ try {
   
   console.log('✅ Deposit prepared successfully!');
   console.log('XDR to sign:', response.xdr);
-  console.log('Simulation result:', response.simulationResult); // Simulation details
+  console.log('Simulation result:', response.simulationResponse); // Simulation details
   
   // Sign with wallet and submit
   // const result = await sdk.sendTransaction(signedXDR, SupportedNetworks.TESTNET);
@@ -201,7 +201,7 @@ try {
   
   console.log('✅ Withdrawal prepared successfully!');
   console.log('XDR to sign:', response.xdr);
-  console.log('Simulation result:', response.simulationResult); // Withdrawal details
+  console.log('Simulation result:', response.simulationResponse); // Withdrawal details
 } catch (error) {
   console.error('Withdrawal failed:', error.message);
 }
@@ -223,7 +223,7 @@ try {
   
   console.log('✅ Share withdrawal prepared successfully!');
   console.log('XDR to sign:', response.xdr);
-  console.log('Simulation result:', response.simulationResult); // Share withdrawal details
+  console.log('Simulation result:', response.simulationResponse); // Share withdrawal details
 } catch (error) {
   console.error('Share withdrawal failed:', error.message);
 }
@@ -271,7 +271,7 @@ try {
   );
   
   console.log('Deposit XDR:', response.xdr);
-  console.log('Simulation result:', response.simulationResult);
+  console.log('Simulation result:', response.simulationResponse);
   
   // Sign the XDR and submit the transaction
 } catch (error) {
@@ -298,7 +298,7 @@ try {
   );
   
   console.log('Withdrawal XDR:', response.xdr);
-  console.log('Simulation result:', response.simulationResult);
+  console.log('Simulation result:', response.simulationResponse);
 } catch (error) {
   console.error('Withdrawal failed:', error.message);
 }
@@ -323,7 +323,7 @@ try {
   );
   
   console.log('Share withdrawal XDR:', response.xdr);
-  console.log('Simulation result:', response.simulationResult);
+  console.log('Simulation result:', response.simulationResponse);
 } catch (error) {
   console.error('Share withdrawal failed:', error.message);
 }

@@ -175,7 +175,7 @@ async function createVaultExample(sdk: DefindexSDK): Promise<string | null> {
     if (response.xdr) {
       console.log('🎉 Vault created successfully!');
       console.log('🔗 XDR to sign:', response.xdr);
-      console.log('📊 Simulation result:', response.simulationResult);
+      console.log('📊 Simulation result:', response.simulationResponse);
 
       // In a real case, you would sign the XDR and send it here
       console.log('📝 Note: In production, sign this XDR with your wallet and send it using sendTransaction()');
@@ -288,7 +288,7 @@ async function depositExample(sdk: DefindexSDK, vaultAddress: string): Promise<v
     
     console.log('🎉 Deposit prepared successfully!');
     console.log('🔗 XDR to sign:', response.xdr);
-    console.log('📊 Simulation response:', response.simulationResult);
+    console.log('📊 Simulation response:', response.simulationResponse);
     console.log('📝 Note: Sign this XDR and send it to complete the deposit');
     console.log('✅ Deposit simulated');
   } catch (error) {
@@ -315,7 +315,7 @@ async function withdrawExample(sdk: DefindexSDK, vaultAddress: string): Promise<
     
     console.log('🎉 Withdrawal prepared successfully!');
     console.log('🔗 XDR to sign:', response.xdr);
-    console.log('📊 Simulation response:', response.simulationResult);
+    console.log('📊 Simulation response:', response.simulationResponse);
     console.log('✅ Withdrawal by amount simulated');
   } catch (error) {
     console.error('❌ Error in withdrawal:', error);
@@ -341,7 +341,7 @@ async function withdrawSharesExample(sdk: DefindexSDK, vaultAddress: string): Pr
     
     console.log('🎉 Share withdrawal prepared successfully!');
     console.log('🔗 XDR to sign:', response.xdr);
-    console.log('📊 Simulation response:', response.simulationResult);
+    console.log('📊 Simulation response:', response.simulationResponse);
     console.log('✅ Share withdrawal simulated');
   } catch (error) {
     console.error('❌ Error in share withdrawal:', error);
@@ -378,7 +378,7 @@ async function getVaultReportExample(sdk: DefindexSDK, vaultAddress: string): Pr
     if (report.xdr) {
       console.log(`   🔗 Report XDR: ${report.xdr}`);
     }
-    if (report.simulationResult) {
+    if (report.simulationResponse) {
       console.log('   ⚡ Simulation completed successfully');
     }
     console.log('✅ Vault report obtained');

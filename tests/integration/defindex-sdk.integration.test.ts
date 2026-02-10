@@ -123,7 +123,7 @@ describe("DefindexSDK - Integration Tests", () => {
     //     console.log("🏗️  Vault creation response:", response);
 
     //     expect(response.xdr).toBeDefined();
-    //     expect(response.simulationResult).toBeDefined();
+    //     expect(response.simulationResponse).toBeDefined();
 
     //     console.log("✅ Vault creation successful");
     //   } catch (error: any) {
