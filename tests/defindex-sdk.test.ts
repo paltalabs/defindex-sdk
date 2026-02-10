@@ -168,8 +168,7 @@ describe('DefindexSDK - Unit Tests', () => {
       };
       const mockResponse = {
         xdr: 'AAAAAgAAAAC7VYzjqMryr...',
-        callParams: vaultConfig,
-        simulationResult: 'SUCCESS'
+        simulationResponse: 'SUCCESS'
       };
       mockHttpClient.post.mockResolvedValue(mockResponse);
 
@@ -177,7 +176,6 @@ describe('DefindexSDK - Unit Tests', () => {
 
       expect(result).toEqual(mockResponse);
       expect(result.xdr).toBeTruthy();
-      expect(result.callParams).toEqual(vaultConfig);
       expect(mockHttpClient.post).toHaveBeenCalledWith('/factory/create-vault?network=testnet', vaultConfig);
     });
 
@@ -225,8 +223,7 @@ describe('DefindexSDK - Unit Tests', () => {
       };
       const mockResponse = {
         xdr: 'AAAAAgAAAAC7VYzjqMryr...',
-        callParams: vaultConfig,
-        simulationResult: 'SUCCESS'
+        simulationResponse: 'SUCCESS'
       };
       mockHttpClient.post.mockResolvedValue(mockResponse);
 
@@ -234,7 +231,7 @@ describe('DefindexSDK - Unit Tests', () => {
 
       expect(result).toEqual(mockResponse);
       expect(result.xdr).toBeTruthy();
-      expect(result.simulationResult).toBe('SUCCESS');
+      expect(result.simulationResponse).toBe('SUCCESS');
       expect(mockHttpClient.post).toHaveBeenCalledWith('/factory/create-vault-deposit?network=testnet', vaultConfig);
     });
   });
@@ -338,7 +335,7 @@ describe('DefindexSDK - Unit Tests', () => {
       };
       const mockResponse = {
         xdr: 'AAAAAgAAAAC7VYzjqMryr...',
-        simulationResult: 'SUCCESS',
+        simulationResponse: 'SUCCESS',
         functionName: 'deposit',
         params: []
       };
@@ -348,7 +345,7 @@ describe('DefindexSDK - Unit Tests', () => {
 
       expect(result).toEqual(mockResponse);
       expect(result.xdr).toBeTruthy();
-      expect(result.simulationResult).toBe('SUCCESS');
+      expect(result.simulationResponse).toBe('SUCCESS');
       expect(depositData.amounts.every(amount => amount > 0)).toBe(true);
       expect(mockHttpClient.post).toHaveBeenCalledWith(`/vault/${vaultAddress}/deposit?network=testnet`, depositData);
     });
@@ -400,7 +397,7 @@ describe('DefindexSDK - Unit Tests', () => {
     });
 
     it('should get vault report', async () => {
-      const mockResponse = { xdr: 'report_xdr', simulationResult: 'simulation_data', functionName: 'report', params: [] };
+      const mockResponse = { xdr: 'report_xdr', simulationResponse: 'simulation_data', functionName: 'report', params: [] };
       mockHttpClient.get.mockResolvedValue(mockResponse);
 
       const result = await sdk.getReport(vaultAddress, SupportedNetworks.TESTNET);
@@ -638,7 +635,7 @@ describe('DefindexSDK - Unit Tests', () => {
 
       const responseWithInvalidXDR = {
         xdr: '', // Empty XDR should be handled
-        simulationResult: 'SUCCESS',
+        simulationResponse: 'SUCCESS',
         functionName: 'deposit',
         params: []
       };
@@ -646,7 +643,7 @@ describe('DefindexSDK - Unit Tests', () => {
 
       const result = await sdk.depositToVault(vaultAddress, depositData, SupportedNetworks.TESTNET);
       expect(result.xdr).toBe('');
-      expect(result.simulationResult).toBe('SUCCESS');
+      expect(result.simulationResponse).toBe('SUCCESS');
     });
 
     it('should handle concurrent requests properly', async () => {
@@ -752,13 +749,12 @@ describe('DefindexSDK - Unit Tests', () => {
 
       mockHttpClient.post.mockResolvedValueOnce({
         xdr: 'create_xdr',
-        callParams: vaultConfig,
-        simulationResult: 'SUCCESS'
+        simulationResponse: 'SUCCESS'
       });
 
       const createResult = await sdk.createVault(vaultConfig, SupportedNetworks.TESTNET);
       expect(createResult.xdr).toBeTruthy();
-      expect(createResult.simulationResult).toBe('SUCCESS');
+      expect(createResult.simulationResponse).toBe('SUCCESS');
 
       // 3. Get vault info
       mockHttpClient.get.mockResolvedValueOnce({
