@@ -1,4 +1,4 @@
-import { BaseVaultTransactionResponse } from "./base.types";
+import { TransactionResponse } from "./base.types";
 
 /* Core vault creation types */
 export interface AssetStrategySet {
@@ -12,79 +12,73 @@ export interface Strategy {
   paused: boolean;
 }
 
-export interface CreateDefindexVault {
-  roles: Record<number, string>;
-  vault_fee_bps: number;
-  assets: AssetStrategySet[];
-  soroswap_router?: string;
-  name_symbol: Record<string, string>;
-  upgradable: boolean;
+/* Vault operation parameters */
+export interface DepositParams {
   caller: string;
-  amounts?: number[];
+  amounts: number[];
+  slippageBps?: number;
+  invest: boolean;
 }
 
-export interface CreateDefindexVaultResponse {
-  call_params: CreateDefindexVault;
-  xdr: string | null;
-  simulation_result: string;
-  error?: string;
-  operationXDR?: string;
-  isSmartWallet?: boolean;
-}
+/** @deprecated Use DepositParams instead */
+export type DepositToVaultParams = DepositParams;
 
-/* Base parameter interfaces */
-interface BaseCallerParams {
+export interface WithdrawParams {
   caller: string;
-}
-
-interface BaseStrategyParams extends BaseCallerParams {
-  strategy_address: string;
-}
-
-interface BaseAmountParams extends BaseCallerParams {
   amounts: number[];
   slippageBps?: number;
 }
 
-/* Vault operation parameters */
-export interface DepositToVaultParams extends BaseAmountParams {
-  invest: boolean;
-}
-
-export interface WithdrawParams extends BaseAmountParams {}
-
-export interface WithdrawSharesParams extends BaseCallerParams {
+export interface WithdrawSharesParams {
+  caller: string;
   shares: number;
   slippageBps?: number;
 }
 
-export interface RescueFromVaultParams extends BaseStrategyParams {}
-
-export interface PauseStrategyParams extends BaseStrategyParams {}
-
-export interface UnpauseStrategyParams extends BaseStrategyParams {}
-
-/* Fee management interfaces */
-export interface LockFeesParams extends BaseCallerParams {
-  new_fee_bps?: number;
-}
-
-export interface ReleaseFeesParams extends BaseStrategyParams {
-  amount: number;
+export interface RescueFromVaultParams {
+  caller: string;
   strategy_address: string;
 }
 
-export interface DistributeFeesParams extends BaseCallerParams {}
+export interface PauseStrategyParams {
+  caller: string;
+  strategy_address: string;
+}
+
+export interface UnpauseStrategyParams {
+  caller: string;
+  strategy_address: string;
+}
+
+/* Fee management interfaces */
+export interface LockFeesParams {
+  caller: string;
+  new_fee_bps?: number;
+}
+
+export interface ReleaseFeesParams {
+  caller: string;
+  strategy_address: string;
+  amount: number;
+}
+
+export interface DistributeFeesParams {
+  caller: string;
+}
 
 /* Contract management interfaces */
-export interface SetVaultRoleParams extends BaseCallerParams {
+export interface SetVaultRoleParams {
+  caller: string;
   new_address: string;
 }
-export interface UpgradeWasmParams extends BaseCallerParams {
+
+export interface UpgradeWasmParams {
+  caller: string;
   new_wasm_hash: string;
 }
 
-export interface RebalanceParams extends BaseCallerParams {
+export interface RebalanceParams {
+  caller: string;
   instructions: InstructionParam[];
 }
 
@@ -92,7 +86,7 @@ export type Instruction =
   | { type: "Unwind"; strategy_address: string; amount: number }
   | { type: "Invest"; strategy_address: string; amount: number }
   | {
-      type: "SwapExactIn";  
+      type: "SwapExactIn";
       token_in: string;
       token_out: string;
       amount_in: number;
@@ -121,12 +115,20 @@ export type InstructionParam =
     };
 
 /* Vault data structures */
-export interface VaultRole {
-  manager: string;
+
+/** Typed vault roles configuration */
+export interface VaultRolesConfig {
+  /** Emergency manager address */
   emergencyManager: string;
+  /** Rebalance manager address */
   rebalanceManager: string;
+  /** Fee receiver address */
   feeReceiver: string;
+  /** Vault manager address */
+  manager: string;
 }
+
+export type VaultRole = VaultRolesConfig;
 
 export interface VaultStrategy {
   address: string;
@@ -146,13 +148,44 @@ export interface VaultFees {
   defindexFee: number;
 }
 
+/* Vault creation types */
+export interface CreateVaultParams {
+  caller: string;
+  roles: VaultRolesConfig;
+  vaultFeeBps: number;
+  name: string;
+  symbol: string;
+  assets: AssetStrategySet[];
+  soroswapRouter?: string;
+  upgradable: boolean;
+}
+
+export interface CreateVaultDepositParams extends CreateVaultParams {
+  depositAmounts: number[];
+}
+
+/* Vault managed funds types */
+export interface ManagedFundsStrategyAllocation {
+  amount: string;
+  paused: boolean;
+  strategy_address: string;
+}
+
+export interface AssetManagedFunds {
+  asset: string;
+  idle_amount: string;
+  invested_amount: string;
+  strategy_allocations: ManagedFundsStrategyAllocation[];
+  total_amount: string;
+}
+
 /* Vault endpoint response types */
 export interface VaultInfoResponse {
   name: string;
   symbol: string;
-  roles: VaultRole;
+  roles: VaultRolesConfig;
   assets: VaultAsset[];
-  totalManagedFunds: any[];
+  totalManagedFunds: AssetManagedFunds[];
   feesBps: VaultFees;
   apy: number;
 }
@@ -162,7 +195,10 @@ export interface VaultBalanceResponse {
   underlyingBalance: number[];
 }
 
-export interface VaultTransactionResponse extends BaseVaultTransactionResponse {}
+export interface VaultTransactionResponse extends TransactionResponse {
+  functionName: string;
+  params: unknown[];
+}
 
 export interface VaultApyResponse {
   apy: number;

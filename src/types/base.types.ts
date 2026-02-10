@@ -1,16 +1,7 @@
-export interface BaseTransactionResponse {
+/** Unified base response type for all transaction operations */
+export interface TransactionResponse {
   xdr: string | null;
-  simulation_result: string;
-  error?: string;
-  operationXDR?: string;
-  isSmartWallet?: boolean;
-}
-
-export interface BaseVaultTransactionResponse {
-  xdr: string | null;
-  simulationResponse: any;
-  functionName: string;
-  params: any[];
+  simulationResponse: unknown;
   operationXDR?: string;
   isSmartWallet?: boolean;
 }

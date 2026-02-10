@@ -1,12 +1,10 @@
 import { HttpClient } from './clients/http-client';
 import {
-  CreateDefindexVault,
-  CreateDefindexVaultDepositDto,
+  CreateVaultParams,
+  CreateVaultDepositParams,
   CreateVaultAutoInvestParams,
   CreateVaultAutoInvestResponse,
-  CreateVaultDepositResponse,
-  CreateVaultResponse,
-  DepositToVaultParams,
+  DepositParams,
   DistributeFeesParams,
   FactoryAddressResponse,
   LockFeesParams,
@@ -27,6 +25,7 @@ import {
   VaultTransactionResponse,
   WithdrawParams,
   WithdrawSharesParams,
+  TransactionResponse,
 } from './types';
 
 /**
@@ -34,7 +33,7 @@ import {
  */
 export interface DefindexSDKConfig {
   apiKey?: string;
-  /** Custom API base URL (defaults to 'https://api.defindex.io') */
+  /** Custom API base URL (defaults to 'https://defindex-api-staging-436722401508.us-central1.run.app') */
   baseUrl?: string;
   /** Request timeout in milliseconds (defaults to 30000) */
   timeout?: number;
@@ -49,14 +48,14 @@ export interface DefindexSDKConfig {
  * ```typescript
  * // Basic initialization with default network
  * const sdk = new DefindexSDK({
- *   baseUrl: 'https://api.defindex.io',
+ *   baseUrl: 'https://defindex-api-staging-436722401508.us-central1.run.app',
  *   defaultNetwork: SupportedNetworks.TESTNET
  * });
  *
  * // With API key authentication
  * const sdk = new DefindexSDK({
  *   apiKey: 'sk_your_api_key_here',
- *   baseUrl: 'https://api.defindex.io',
+ *   baseUrl: 'https://defindex-api-staging-436722401508.us-central1.run.app',
  *   defaultNetwork: SupportedNetworks.MAINNET
  * });
  *
@@ -80,7 +79,7 @@ export class DefindexSDK {
     this.config = config;
     this.defaultNetwork = config.defaultNetwork;
     this.httpClient = new HttpClient(
-      config.baseUrl || 'https://api.defindex.io',
+      config.baseUrl || 'https://defindex-api-staging-436722401508.us-central1.run.app',
       config.apiKey || '', // API key or empty string
       config.timeout || 30000
     );
@@ -163,23 +162,29 @@ export class DefindexSDK {
    * @returns Transaction XDR for vault creation
    * @example
    * ```typescript
-   * const vaultConfig = {
-   *   roles: { "0": "GMANAGER...", "1": "CFEE..." },
-   *   vault_fee_bps: 100, // 1%
-   *   assets: [{ address: "CASSET...", strategies: [...] }],
-   *   name_symbol: { name: "My Vault", symbol: "MVLT" },
+   * const vaultConfig: CreateVaultParams = {
+   *   roles: {
+   *     manager: 'GMANAGER...',
+   *     feeReceiver: 'GFEE...',
+   *     emergencyManager: 'GEMERGENCY...',
+   *     rebalanceManager: 'GREBALANCE...'
+   *   },
+   *   vaultFeeBps: 100, // 1%
+   *   assets: [{ address: 'CASSET...', strategies: [...] }],
+   *   name: 'My Vault',
+   *   symbol: 'MVLT',
    *   upgradable: true,
-   *   caller: "GCALLER..."
+   *   caller: 'GCALLER...'
    * };
    * const response = await sdk.createVault(vaultConfig);
    * ```
    */
   public async createVault(
-    vaultConfig: CreateDefindexVault,
+    vaultConfig: CreateVaultParams,
     network?: SupportedNetworks,
-  ): Promise<CreateVaultResponse> {
+  ): Promise<TransactionResponse> {
     const resolvedNetwork = this.getNetwork(network);
-    return this.httpClient.post<CreateVaultResponse>(
+    return this.httpClient.post<TransactionResponse>(
       `/factory/create-vault?network=${resolvedNetwork}`,
       vaultConfig,
     );
@@ -192,19 +197,19 @@ export class DefindexSDK {
    * @returns Transaction XDR for vault creation and deposit
    * @example
    * ```typescript
-   * const vaultConfig = {
-   *   // ... vault config
-   *   deposit_amounts: [1000000, 2000000] // Initial deposit amounts
+   * const vaultConfig: CreateVaultDepositParams = {
+   *   // ... vault config (same as CreateVaultParams)
+   *   depositAmounts: [1000000, 2000000] // Initial deposit amounts
    * };
    * const response = await sdk.createVaultWithDeposit(vaultConfig);
    * ```
    */
   public async createVaultWithDeposit(
-    vaultConfig: CreateDefindexVaultDepositDto,
+    vaultConfig: CreateVaultDepositParams,
     network?: SupportedNetworks,
-  ): Promise<CreateVaultDepositResponse> {
+  ): Promise<TransactionResponse> {
     const resolvedNetwork = this.getNetwork(network);
-    return this.httpClient.post<CreateVaultDepositResponse>(
+    return this.httpClient.post<TransactionResponse>(
       `/factory/create-vault-deposit?network=${resolvedNetwork}`,
       vaultConfig,
     );
@@ -225,7 +230,7 @@ export class DefindexSDK {
    * @returns Transaction XDR, predicted vault address, and warning about address prediction
    * @example
    * ```typescript
-   * const params = {
+   * const params: CreateVaultAutoInvestParams = {
    *   caller: 'GCALLER...',
    *   roles: {
    *     emergencyManager: 'GEMERGENCY...',
@@ -343,7 +348,7 @@ export class DefindexSDK {
    */
   public async depositToVault(
     vaultAddress: string,
-    depositData: DepositToVaultParams,
+    depositData: DepositParams,
     network?: SupportedNetworks,
   ): Promise<VaultTransactionResponse> {
     const resolvedNetwork = this.getNetwork(network);
@@ -361,7 +366,7 @@ export class DefindexSDK {
    * @returns Transaction XDR for signing and simulation response
    * @example
    * ```typescript
-   * const withdrawData = {
+   * const withdrawData: WithdrawParams = {
    *   amounts: [500000, 1000000],
    *   caller: 'GUSER...',
    *   slippageBps: 100 // 1% slippage tolerance
@@ -433,7 +438,7 @@ export class DefindexSDK {
    * @returns Transaction XDR for Rebalance Manager signing
    * @example
    * ```typescript
-   * const rebalanceData = {
+   * const rebalanceData: RebalanceParams = {
    *   caller: 'GREBALANCE_MANAGER...',
    *   instructions: [
    *     { type: 'Unwind', strategy_address: 'CSTRATEGY1...', amount: 500000 },
@@ -470,7 +475,7 @@ export class DefindexSDK {
    * @returns Transaction XDR for Emergency Manager signing and rescued assets info
    * @example
    * ```typescript
-   * const rescueData = {
+   * const rescueData: RescueFromVaultParams = {
    *   strategy_address: 'CSTRATEGY...',
    *   caller: 'GEMERGENCY_MANAGER...'
    * };
@@ -495,14 +500,6 @@ export class DefindexSDK {
    * @param strategyData - Strategy pause parameters
    * @param network - Stellar network (optional, uses default if not specified)
    * @returns Transaction XDR for Strategy Manager signing
-   * @example
-   * ```typescript
-   * const strategyData = {
-   *   strategy_address: 'CSTRATEGY...',
-   *   caller: 'CSTRATEGY_MANAGER...'
-   * };
-   * const response = await sdk.pauseStrategy('CVAULT...', strategyData);
-   * ```
    */
   public async pauseStrategy(
     vaultAddress: string,
@@ -522,14 +519,6 @@ export class DefindexSDK {
    * @param strategyData - Strategy unpause parameters
    * @param network - Stellar network (optional, uses default if not specified)
    * @returns Transaction XDR for Strategy Manager signing
-   * @example
-   * ```typescript
-   * const strategyData = {
-   *   strategy_address: 'CSTRATEGY...',
-   *   caller: 'GSTRATEGY_MANAGER...'
-   * };
-   * const response = await sdk.unpauseStrategy('CVAULT...', strategyData);
-   * ```
    */
   public async unpauseStrategy(
     vaultAddress: string,
@@ -579,7 +568,7 @@ export class DefindexSDK {
    * @returns Transaction XDR for Manager signing
    * @example
    * ```typescript
-   * const roleData = {
+   * const roleData: SetVaultRoleParams = {
    *   caller: 'GMANAGER...',
    *   new_address: 'GNEW_MANAGER...'
    * };
@@ -611,7 +600,7 @@ export class DefindexSDK {
    * @returns Transaction XDR for Manager signing
    * @example
    * ```typescript
-   * const lockData = {
+   * const lockData: LockFeesParams = {
    *   caller: 'GMANAGER...',
    *   new_fee_bps: 150 // Optional: new fee rate in basis points (1.5%)
    * };
@@ -638,7 +627,7 @@ export class DefindexSDK {
    * @returns Transaction XDR for Manager signing
    * @example
    * ```typescript
-   * const releaseData = {
+   * const releaseData: ReleaseFeesParams = {
    *   caller: 'GMANAGER...',
    *   strategy_address: 'CSTRATEGY...',
    *   amount: 100000
@@ -666,7 +655,7 @@ export class DefindexSDK {
    * @returns Transaction XDR for Manager signing
    * @example
    * ```typescript
-   * const distributeData = {
+   * const distributeData: DistributeFeesParams = {
    *   caller: 'GMANAGER...'
    * };
    * const response = await sdk.distributeVaultFees('CVAULT...', distributeData);
@@ -692,7 +681,7 @@ export class DefindexSDK {
    * @returns Transaction XDR for Manager signing
    * @example
    * ```typescript
-   * const upgradeData = {
+   * const upgradeData: UpgradeWasmParams = {
    *   caller: 'GMANAGER...',
    *   new_wasm_hash: 'abcd1234...' // New WASM hash to upgrade to
    * };
