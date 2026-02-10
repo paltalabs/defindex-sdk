@@ -1,6 +1,6 @@
 {
   "name": "@defindex/sdk",
-  "version": "0.3.0-alpha.0",
+  "version": "0.3.0-alpha.1",
   "description": "Official TypeScript SDK for DeFindex API",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
