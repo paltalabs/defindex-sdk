@@ -96,14 +96,14 @@ describe("DefindexSDK - Integration Tests", () => {
     // it("should create a vault", async () => {
     //   if (skipTests) return;
 
-    //   const vaultConfig: CreateDefindexVault = {
+    //   const vaultConfig: CreateVaultParams = {
     //     roles: {
-    //       0: "GEMERGENCY_MANAGER_ADDRESS...", // Emergency Manager
-    //       1: "GFEE_RECEIVER_ADDRESS...",      // Fee Receiver  
-    //       2: "GVAULT_MANAGER_ADDRESS...",     // Vault Manager
-    //       3: "GREBALANCE_MANAGER_ADDRESS..."  // Rebalance Manager
+    //       emergencyManager: "GEMERGENCY_MANAGER_ADDRESS...",
+    //       feeReceiver: "GFEE_RECEIVER_ADDRESS...",
+    //       manager: "GVAULT_MANAGER_ADDRESS...",
+    //       rebalanceManager: "GREBALANCE_MANAGER_ADDRESS..."
     //     },
-    //     vault_fee_bps: 100, // 1% fee
+    //     vaultFeeBps: 100, // 1% fee
     //     assets: [{
     //       address: "CUSDC_CONTRACT_ADDRESS...",
     //       strategies: [{
@@ -112,10 +112,8 @@ describe("DefindexSDK - Integration Tests", () => {
     //         paused: false
     //       }]
     //     }],
-    //     name_symbol: { 
-    //       name: "Test Vault", 
-    //       symbol: "TV" 
-    //     },
+    //     name: "Test Vault",
+    //     symbol: "TV",
     //     upgradable: true,
     //     caller: "GCREATOR_ADDRESS..."
     //   };
@@ -125,7 +123,7 @@ describe("DefindexSDK - Integration Tests", () => {
     //     console.log("🏗️  Vault creation response:", response);
 
     //     expect(response.xdr).toBeDefined();
-    //     expect(response.simulation_result).toBeDefined();
+    //     expect(response.simulationResult).toBeDefined();
 
     //     console.log("✅ Vault creation successful");
     //   } catch (error: any) {
@@ -197,7 +195,7 @@ describe("DefindexSDK - Integration Tests", () => {
     // it("should handle deposit to vault", async () => {
     //   if (skipTests) return;
 
-    //   const depositData: DepositToVaultParams = {
+    //   const depositData: DepositParams = {
     //     amounts: [1000000], // Small test amount
     //     caller: 'GUSER_ADDRESS...',
     //     invest: true,

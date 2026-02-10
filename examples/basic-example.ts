@@ -13,9 +13,9 @@
 
 import { DefindexSDK, SupportedNetworks, VaultRoles } from '../src';
 import type {
-  CreateDefindexVault,
+  CreateVaultParams,
   CreateVaultAutoInvestParams,
-  DepositToVaultParams,
+  DepositParams,
   WithdrawParams,
   WithdrawSharesParams,
   VaultInfoResponse,
@@ -145,14 +145,14 @@ async function getFactoryAddress(sdk: DefindexSDK): Promise<string> {
 async function createVaultExample(sdk: DefindexSDK): Promise<string | null> {
   console.log('🏦 Creating vault example...');
   
-  const vaultConfig: CreateDefindexVault = {
+  const vaultConfig: CreateVaultParams = {
     roles: {
-      0: EXAMPLE_ADDRESSES.EMERGENCY_MANAGER,
-      1: EXAMPLE_ADDRESSES.FEE_RECEIVER,
-      2: EXAMPLE_ADDRESSES.MANAGER,
-      3: EXAMPLE_ADDRESSES.REBALANCE_MANAGER
+      emergencyManager: EXAMPLE_ADDRESSES.EMERGENCY_MANAGER,
+      feeReceiver: EXAMPLE_ADDRESSES.FEE_RECEIVER,
+      manager: EXAMPLE_ADDRESSES.MANAGER,
+      rebalanceManager: EXAMPLE_ADDRESSES.REBALANCE_MANAGER
     },
-    vault_fee_bps: 100, // 1% fee
+    vaultFeeBps: 100, // 1% fee
     assets: [{
       address: EXAMPLE_ADDRESSES.XLM_ASSET,
       strategies: [{
@@ -161,10 +161,8 @@ async function createVaultExample(sdk: DefindexSDK): Promise<string | null> {
         paused: false
       }]
     }],
-    name_symbol: {
-      name: 'My DeFi Vault',
-      symbol: 'MDV'
-    },
+    name: 'My DeFi Vault',
+    symbol: 'MDV',
     upgradable: true,
     caller: EXAMPLE_ADDRESSES.MANAGER
   };
@@ -177,19 +175,19 @@ async function createVaultExample(sdk: DefindexSDK): Promise<string | null> {
     if (response.xdr) {
       console.log('🎉 Vault created successfully!');
       console.log('🔗 XDR to sign:', response.xdr);
-      console.log('📊 Simulation result:', response.simulation_result);
-      
+      console.log('📊 Simulation result:', response.simulationResult);
+
       // In a real case, you would sign the XDR and send it here
       console.log('📝 Note: In production, sign this XDR with your wallet and send it using sendTransaction()');
-      
+
       // Simulate vault address created
       const simulatedVaultAddress = EXAMPLE_ADDRESSES.DEPLOYED_VAULT;
       console.log('🏦 Simulated vault address:', simulatedVaultAddress);
       console.log('✅ Vault created');
-      
+
       return simulatedVaultAddress;
     } else {
-      console.log('⚠️  Could not create vault:', response.error);
+      console.log('⚠️  Could not create vault');
       return null;
     }
   } catch (error) {
@@ -276,7 +274,7 @@ function displayVaultInfo(vaultInfo: VaultInfoResponse): void {
 async function depositExample(sdk: DefindexSDK, vaultAddress: string): Promise<void> {
   console.log('💳 Simulating vault deposit...');
   
-  const depositData: DepositToVaultParams = {
+  const depositData: DepositParams = {
     amounts: [1000000], // 1 USDC (assuming 6 decimals)
     caller: EXAMPLE_ADDRESSES.USER,
     invest: true, // Auto-invest after deposit
@@ -290,7 +288,7 @@ async function depositExample(sdk: DefindexSDK, vaultAddress: string): Promise<v
     
     console.log('🎉 Deposit prepared successfully!');
     console.log('🔗 XDR to sign:', response.xdr);
-    console.log('📊 Simulation response:', response.simulationResponse);
+    console.log('📊 Simulation response:', response.simulationResult);
     console.log('📝 Note: Sign this XDR and send it to complete the deposit');
     console.log('✅ Deposit simulated');
   } catch (error) {
@@ -317,7 +315,7 @@ async function withdrawExample(sdk: DefindexSDK, vaultAddress: string): Promise<
     
     console.log('🎉 Withdrawal prepared successfully!');
     console.log('🔗 XDR to sign:', response.xdr);
-    console.log('📊 Simulation response:', response.simulationResponse);
+    console.log('📊 Simulation response:', response.simulationResult);
     console.log('✅ Withdrawal by amount simulated');
   } catch (error) {
     console.error('❌ Error in withdrawal:', error);
@@ -343,7 +341,7 @@ async function withdrawSharesExample(sdk: DefindexSDK, vaultAddress: string): Pr
     
     console.log('🎉 Share withdrawal prepared successfully!');
     console.log('🔗 XDR to sign:', response.xdr);
-    console.log('📊 Simulation response:', response.simulationResponse);
+    console.log('📊 Simulation response:', response.simulationResult);
     console.log('✅ Share withdrawal simulated');
   } catch (error) {
     console.error('❌ Error in share withdrawal:', error);
@@ -380,7 +378,7 @@ async function getVaultReportExample(sdk: DefindexSDK, vaultAddress: string): Pr
     if (report.xdr) {
       console.log(`   🔗 Report XDR: ${report.xdr}`);
     }
-    if (report.simulationResponse) {
+    if (report.simulationResult) {
       console.log('   ⚡ Simulation completed successfully');
     }
     console.log('✅ Vault report obtained');
@@ -588,14 +586,14 @@ async function testCreateVaultWithRebalance(sdk: DefindexSDK): Promise<void> {
     console.log('');
     console.log('📦 Step 1: Creating vault...');
 
-    const vaultConfig: CreateDefindexVault = {
+    const vaultConfig: CreateVaultParams = {
       roles: {
-        0: EXAMPLE_ADDRESSES.EMERGENCY_MANAGER,
-        1: EXAMPLE_ADDRESSES.FEE_RECEIVER,
-        2: EXAMPLE_ADDRESSES.MANAGER,
-        3: EXAMPLE_ADDRESSES.REBALANCE_MANAGER
+        emergencyManager: EXAMPLE_ADDRESSES.EMERGENCY_MANAGER,
+        feeReceiver: EXAMPLE_ADDRESSES.FEE_RECEIVER,
+        manager: EXAMPLE_ADDRESSES.MANAGER,
+        rebalanceManager: EXAMPLE_ADDRESSES.REBALANCE_MANAGER
       },
-      vault_fee_bps: 100,
+      vaultFeeBps: 100,
       assets: [{
         address: EXAMPLE_ADDRESSES.XLM_ASSET,
         strategies: [{
@@ -604,10 +602,8 @@ async function testCreateVaultWithRebalance(sdk: DefindexSDK): Promise<void> {
           paused: false
         }]
       }],
-      name_symbol: {
-        name: 'Test Rebalance Vault',
-        symbol: 'TRV'
-      },
+      name: 'Test Rebalance Vault',
+      symbol: 'TRV',
       upgradable: true,
       caller: EXAMPLE_ADDRESSES.MANAGER
     };
@@ -618,7 +614,7 @@ async function testCreateVaultWithRebalance(sdk: DefindexSDK): Promise<void> {
       console.log('✅ Vault creation XDR generated');
       console.log('   XDR length:', createResponse.xdr.length, 'chars');
     } else {
-      console.log('⚠️  Vault creation failed:', createResponse.error);
+      console.log('⚠️  Vault creation failed');
       return;
     }
 
@@ -742,13 +738,13 @@ async function sendTransactionExample(sdk: DefindexSDK, signedXDR: string): Prom
   
   try {
     // Direct Stellar sending
-    const response = await sdk.sendTransaction(signedXDR, NETWORK, false);
+    const response = await sdk.sendTransaction(signedXDR, NETWORK);
     
     console.log('🎉 Transaction sent successfully!');
     console.log('🔗 Transaction hash:', response.txHash);
-    console.log('✅ Status:', response.status);
-    
-    if (response.status === 'SUCCESS') {
+    console.log('✅ Success:', response.success);
+
+    if (response.success) {
       console.log('🎊 Transaction confirmed on blockchain!');
     }
   } catch (error) {

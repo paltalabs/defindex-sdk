@@ -81,16 +81,16 @@ try {
 Vault creation is now fully functional! The factory generates proper XDR for signing.
 
 ```typescript
-import { CreateDefindexVault, SupportedNetworks } from '@defindex/sdk';
+import { CreateVaultParams, SupportedNetworks } from '@defindex/sdk';
 
-const vaultConfig: CreateDefindexVault = {
+const vaultConfig: CreateVaultParams = {
   roles: {
-    0: "GEMERGENCY_MANAGER_ADDRESS...", // Emergency Manager
-    1: "GFEE_RECEIVER_ADDRESS...",      // Fee Receiver
-    2: "GVAULT_MANAGER_ADDRESS...",     // Vault Manager
-    3: "GREBALANCE_MANAGER_ADDRESS..."  // Rebalance Manager
+    emergencyManager: "GEMERGENCY_MANAGER_ADDRESS...",
+    feeReceiver: "GFEE_RECEIVER_ADDRESS...",
+    manager: "GVAULT_MANAGER_ADDRESS...",
+    rebalanceManager: "GREBALANCE_MANAGER_ADDRESS..."
   },
-  vault_fee_bps: 100, // 1% fee (1% = 100 basis points)
+  vaultFeeBps: 100, // 1% fee (1% = 100 basis points)
   assets: [{
     address: "CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC", // XLM asset
     strategies: [{
@@ -99,10 +99,8 @@ const vaultConfig: CreateDefindexVault = {
       paused: false
     }]
   }],
-  name_symbol: { 
-    name: "My DeFi Vault", 
-    symbol: "MDV" 
-  },
+  name: "My DeFi Vault",
+  symbol: "MDV",
   upgradable: true,
   caller: "GCREATOR_ADDRESS..."
 };
@@ -111,7 +109,7 @@ try {
   const response = await sdk.createVault(vaultConfig, SupportedNetworks.TESTNET);
   console.log('✅ Vault created successfully!');
   console.log('XDR to sign:', response.xdr);
-  console.log('Simulation result:', response.simulation_result); // "SUCCESS"
+  console.log('Simulation result:', response.simulationResult);
   
   // Sign the XDR with your wallet and submit using sendTransaction()
   // const result = await sdk.sendTransaction(signedXDR, SupportedNetworks.TESTNET);
@@ -164,9 +162,9 @@ try {
 ### Deposit to Vault
 
 ```typescript
-import { DepositToVaultParams } from '@defindex/sdk';
+import { DepositParams } from '@defindex/sdk';
 
-const depositData: DepositToVaultParams = {
+const depositData: DepositParams = {
   amounts: [1000000], // 1 XLM (7 decimals)
   caller: 'GUSER_ADDRESS...',
   invest: true, // Auto-invest after deposit
@@ -178,7 +176,7 @@ try {
   
   console.log('✅ Deposit prepared successfully!');
   console.log('XDR to sign:', response.xdr);
-  console.log('Simulation result:', response.simulationResponse); // Simulation details
+  console.log('Simulation result:', response.simulationResult); // Simulation details
   
   // Sign with wallet and submit
   // const result = await sdk.sendTransaction(signedXDR, SupportedNetworks.TESTNET);
@@ -190,9 +188,9 @@ try {
 ### Withdraw from Vault (by Amount)
 
 ```typescript
-import { WithdrawFromVaultParams } from '@defindex/sdk';
+import { WithdrawParams } from '@defindex/sdk';
 
-const withdrawData: WithdrawFromVaultParams = {
+const withdrawData: WithdrawParams = {
   amounts: [500000], // 0.5 XLM
   caller: 'GUSER_ADDRESS...',
   slippageBps: 100 // 1% slippage tolerance
@@ -203,7 +201,7 @@ try {
   
   console.log('✅ Withdrawal prepared successfully!');
   console.log('XDR to sign:', response.xdr);
-  console.log('Simulation result:', response.simulationResponse); // Withdrawal details
+  console.log('Simulation result:', response.simulationResult); // Withdrawal details
 } catch (error) {
   console.error('Withdrawal failed:', error.message);
 }
@@ -225,7 +223,7 @@ try {
   
   console.log('✅ Share withdrawal prepared successfully!');
   console.log('XDR to sign:', response.xdr);
-  console.log('Simulation result:', response.simulationResponse); // Share withdrawal details
+  console.log('Simulation result:', response.simulationResult); // Share withdrawal details
 } catch (error) {
   console.error('Share withdrawal failed:', error.message);
 }
@@ -256,9 +254,9 @@ try {
 ### Deposit to Vault
 
 ```typescript
-import { DepositToVaultParams } from '@defindex/sdk';
+import { DepositParams } from '@defindex/sdk';
 
-const depositData: DepositToVaultParams = {
+const depositData: DepositParams = {
   amounts: [1000000, 2000000], // Amounts for each asset
   caller: 'GUSER_ADDRESS...',
   invest: true, // Auto-invest after deposit (default: true)
@@ -273,7 +271,7 @@ try {
   );
   
   console.log('Deposit XDR:', response.xdr);
-  console.log('Simulation result:', response.simulationResponse);
+  console.log('Simulation result:', response.simulationResult);
   
   // Sign the XDR and submit the transaction
 } catch (error) {
@@ -284,9 +282,9 @@ try {
 ### Withdraw from Vault (by Amount)
 
 ```typescript
-import { WithdrawFromVaultParams } from '@defindex/sdk';
+import { WithdrawParams } from '@defindex/sdk';
 
-const withdrawData: WithdrawFromVaultParams = {
+const withdrawData: WithdrawParams = {
   amounts: [500000, 1000000], // Specific amounts to withdraw
   caller: 'GUSER_ADDRESS...',
   slippageBps: 100 // 1% slippage tolerance
@@ -300,7 +298,7 @@ try {
   );
   
   console.log('Withdrawal XDR:', response.xdr);
-  console.log('Simulation result:', response.simulationResponse);
+  console.log('Simulation result:', response.simulationResult);
 } catch (error) {
   console.error('Withdrawal failed:', error.message);
 }
@@ -325,7 +323,7 @@ try {
   );
   
   console.log('Share withdrawal XDR:', response.xdr);
-  console.log('Simulation result:', response.simulationResponse);
+  console.log('Simulation result:', response.simulationResult);
 } catch (error) {
   console.error('Share withdrawal failed:', error.message);
 }
@@ -442,10 +440,10 @@ try {
     SupportedNetworks.TESTNET
   );
 
-  console.log('Transaction hash:', response.hash);
-  console.log('Transaction status:', response.status);
+  console.log('Transaction hash:', response.txHash);
+  console.log('Transaction success:', response.success);
 
-  if (response.status === 'SUCCESS') {
+  if (response.success) {
     console.log('Transaction confirmed!');
   }
 } catch (error) {
@@ -594,9 +592,9 @@ try {
 
 ```typescript
 // ✅ Good - Use provided types for better development experience
-import { DepositToVaultParams, SupportedNetworks } from '@defindex/sdk';
+import { DepositParams, SupportedNetworks } from '@defindex/sdk';
 
-const depositData: DepositToVaultParams = {
+const depositData: DepositParams = {
   amounts: [1000000],
   caller: userAddress,
   invest: true,

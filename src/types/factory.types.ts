@@ -1,24 +1,9 @@
-import { BaseTransactionResponse } from "./base.types";
-import { CreateDefindexVault } from "./vault.types";
-
+import { VaultRolesConfig } from "./vault.types";
 
 /* Factory endpoint response types */
 export interface FactoryAddressResponse {
   address: string;
 }
-
-export interface CreateVaultResponse extends BaseTransactionResponse {
-  call_params: CreateDefindexVault;
-}
-
-export interface CreateVaultDepositResponse extends BaseTransactionResponse {
-  call_params: CreateDefindexVault;
-}
-
-export interface CreateDefindexVaultDepositDto extends CreateDefindexVault {
-  deposit_amounts: number[];
-}
-
 /* Auto-invest types */
 
 /**
@@ -45,20 +30,6 @@ export interface AssetAllocation {
   amount: number;
   /** Strategies for this asset with allocation amounts */
   strategies: StrategyAllocation[];
-}
-
-/**
- * Vault roles configuration for auto-invest
- */
-export interface VaultRolesConfig {
-  /** Emergency manager address */
-  emergencyManager: string;
-  /** Rebalance manager address */
-  rebalanceManager: string;
-  /** Fee receiver address */
-  feeReceiver: string;
-  /** Final vault manager address (will be set after auto-invest) */
-  manager: string;
 }
 
 /**
