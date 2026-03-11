@@ -153,14 +153,14 @@ console.log('Factory address:', factory.address);
 
 #### Create Vault
 ```typescript
-const vaultConfig: CreateDefindexVault = {
+const vaultConfig: CreateVaultParams = {
   roles: {
-    0: "GEMERGENCY_MANAGER_ADDRESS...",  // Emergency Manager
-    1: "GFEE_RECEIVER_ADDRESS...",       // Fee Receiver
-    2: "GVAULT_MANAGER_ADDRESS...",      // Vault Manager
-    3: "GREBALANCE_MANAGER_ADDRESS..."   // Rebalance Manager
+    emergencyManager: "GEMERGENCY_MANAGER_ADDRESS...",
+    feeReceiver: "GFEE_RECEIVER_ADDRESS...",
+    manager: "GVAULT_MANAGER_ADDRESS...",
+    rebalanceManager: "GREBALANCE_MANAGER_ADDRESS..."
   },
-  vault_fee_bps: 100, // 1% fee
+  vaultFeeBps: 100, // 1% fee
   assets: [{
     address: "CXLM_CONTRACT_ADDRESS...",
     strategies: [{
@@ -169,10 +169,8 @@ const vaultConfig: CreateDefindexVault = {
       paused: false
     }]
   }],
-  name_symbol: { 
-    name: "My DeFi Vault", 
-    symbol: "MDV" 
-  },
+  name: "My DeFi Vault",
+  symbol: "MDV",
   upgradable: true,
   caller: "GCREATOR_ADDRESS..."
 };
@@ -347,9 +345,9 @@ import {
   DefindexSDK,
   DefindexSDKConfig,
   SupportedNetworks,
-  CreateDefindexVault,
-  DepositToVaultParams,
-  WithdrawFromVaultParams,
+  CreateVaultParams,
+  DepositParams,
+  WithdrawParams,
   WithdrawSharesParams,
   VaultInfo,
   VaultBalance,

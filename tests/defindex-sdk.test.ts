@@ -1,8 +1,8 @@
 import { DefindexSDK } from '../src';
 import {
-  CreateDefindexVault,
-  CreateDefindexVaultDepositDto,
-  DepositToVaultParams,
+  CreateVaultParams,
+  CreateVaultDepositParams,
+  DepositParams,
   PauseStrategyParams,
   RescueFromVaultParams,
   SupportedNetworks,
@@ -111,7 +111,7 @@ describe('DefindexSDK - Unit Tests', () => {
     });
 
     it('should get factory address for testnet', async () => {
-      const mockResponse = { 
+      const mockResponse = {
         address: 'CCJDRCK7VBZV6KEJ433F2KXNELEGAAXYMQWFG6JGLVYATJ4SDEYLRWMD',
         network: 'testnet'
       };
@@ -145,14 +145,14 @@ describe('DefindexSDK - Unit Tests', () => {
     });
 
     it('should prepare a transaction to create a vault with complete configuration', async () => {
-      const vaultConfig: CreateDefindexVault = { 
-        roles: { 
-          0: 'GMANAGER1234567890123456789012345678901234567890123456',
-          1: 'GFEE12345678901234567890123456789012345678901234567890',
-          2: 'GEMERGENCY123456789012345678901234567890123456789012',
-          3: 'GREBALANCE123456789012345678901234567890123456789012'
-        }, 
-        vault_fee_bps: 100,
+      const vaultConfig: CreateVaultParams = {
+        roles: {
+          manager: 'GMANAGER1234567890123456789012345678901234567890123456',
+          feeReceiver: 'GFEE12345678901234567890123456789012345678901234567890',
+          emergencyManager: 'GEMERGENCY123456789012345678901234567890123456789012',
+          rebalanceManager: 'GREBALANCE123456789012345678901234567890123456789012'
+        },
+        vaultFeeBps: 100,
         assets: [{
           address: 'CASSET1234567890123456789012345678901234567890123456',
           strategies: [{
@@ -160,15 +160,15 @@ describe('DefindexSDK - Unit Tests', () => {
             name: 'Test Strategy',
             paused: false
           }]
-        }], 
-        name_symbol: { name: 'Test Vault', symbol: 'TVT' }, 
-        upgradable: true, 
+        }],
+        name: 'Test Vault',
+        symbol: 'TVT',
+        upgradable: true,
         caller: 'GCALLER123456789012345678901234567890123456789012345'
       };
-      const mockResponse = { 
+      const mockResponse = {
         xdr: 'AAAAAgAAAAC7VYzjqMryr...',
-        call_params: vaultConfig,
-        simulation_result: 'SUCCESS'
+        simulationResponse: 'SUCCESS'
       };
       mockHttpClient.post.mockResolvedValue(mockResponse);
 
@@ -176,19 +176,24 @@ describe('DefindexSDK - Unit Tests', () => {
 
       expect(result).toEqual(mockResponse);
       expect(result.xdr).toBeTruthy();
-      expect(result.call_params).toEqual(vaultConfig);
       expect(mockHttpClient.post).toHaveBeenCalledWith('/factory/create-vault?network=testnet', vaultConfig);
     });
 
     it('should validate vault configuration parameters', async () => {
       const invalidVaultConfig = {
-        roles: { 0: 'invalid_address' }, // Invalid address format
-        vault_fee_bps: -1, // Invalid negative fee
+        roles: {
+          manager: 'invalid_address',
+          feeReceiver: '',
+          emergencyManager: '',
+          rebalanceManager: ''
+        },
+        vaultFeeBps: -1, // Invalid negative fee
         assets: [],
-        name_symbol: { name: '', symbol: '' }, // Empty name/symbol
+        name: '',
+        symbol: '',
         upgradable: true,
         caller: 'GCALLER123456789012345678901234567890123456789012345'
-      } as CreateDefindexVault;
+      } as CreateVaultParams;
 
       const mockError = new Error('Invalid vault configuration');
       mockHttpClient.post.mockRejectedValue(mockError);
@@ -198,25 +203,27 @@ describe('DefindexSDK - Unit Tests', () => {
     });
 
     it('should prepare a create a vault transaction with initial deposit', async () => {
-      const vaultConfig: CreateDefindexVaultDepositDto = { 
-        roles: { 
-          0: 'GMANAGER1234567890123456789012345678901234567890123456',
-          1: 'GFEE12345678901234567890123456789012345678901234567890'
-        }, 
-        vault_fee_bps: 100, 
+      const vaultConfig: CreateVaultDepositParams = {
+        roles: {
+          manager: 'GMANAGER1234567890123456789012345678901234567890123456',
+          feeReceiver: 'GFEE12345678901234567890123456789012345678901234567890',
+          emergencyManager: '',
+          rebalanceManager: ''
+        },
+        vaultFeeBps: 100,
         assets: [{
           address: 'CASSET1234567890123456789012345678901234567890123456',
           strategies: []
-        }], 
-        name_symbol: { name: 'Test Vault', symbol: 'TVT' }, 
-        upgradable: true, 
+        }],
+        name: 'Test Vault',
+        symbol: 'TVT',
+        upgradable: true,
         caller: 'GCALLER123456789012345678901234567890123456789012345',
-        deposit_amounts: [1000000, 2000000] // 1 and 2 tokens with 6 decimals
+        depositAmounts: [1000000, 2000000] // 1 and 2 tokens with 6 decimals
       };
-      const mockResponse = { 
+      const mockResponse = {
         xdr: 'AAAAAgAAAAC7VYzjqMryr...',
-        call_params: vaultConfig,
-        simulation_result: 'SUCCESS'
+        simulationResponse: 'SUCCESS'
       };
       mockHttpClient.post.mockResolvedValue(mockResponse);
 
@@ -224,7 +231,7 @@ describe('DefindexSDK - Unit Tests', () => {
 
       expect(result).toEqual(mockResponse);
       expect(result.xdr).toBeTruthy();
-      expect(result.simulation_result).toBe('SUCCESS');
+      expect(result.simulationResponse).toBe('SUCCESS');
       expect(mockHttpClient.post).toHaveBeenCalledWith('/factory/create-vault-deposit?network=testnet', vaultConfig);
     });
   });
@@ -238,8 +245,8 @@ describe('DefindexSDK - Unit Tests', () => {
     });
 
     it('should get vault info', async () => {
-      const mockResponse = { 
-        name: 'Test Vault', 
+      const mockResponse = {
+        name: 'Test Vault',
         symbol: 'TVT',
         roles: {
           manager: 'GMANAGER1234567890123456789012345678901234567890123456',
@@ -257,7 +264,17 @@ describe('DefindexSDK - Unit Tests', () => {
             paused: false
           }]
         }],
-        totalManagedFunds: [1000000, 2000000],
+        totalManagedFunds: [{
+          asset: 'CASSET1234567890123456789012345678901234567890123456',
+          idle_amount: '1000000',
+          invested_amount: '2000000',
+          strategy_allocations: [{
+            amount: '2000000',
+            paused: false,
+            strategy_address: 'CSTRATEGY123456789012345678901234567890123456789012'
+          }],
+          total_amount: '3000000'
+        }],
         feesBps: { vaultFee: 100, defindexFee: 50 },
         apy: 12.5
       };
@@ -283,14 +300,14 @@ describe('DefindexSDK - Unit Tests', () => {
 
     it('should get vault balance for a user with valid data', async () => {
         const userAddress = 'GUSER1234567890123456789012345678901234567890123456789';
-        const mockResponse = { 
+        const mockResponse = {
           dfTokens: 1000000, // 1 vault token (6 decimals)
           underlyingBalance: [500000, 750000] // Underlying asset balances
         };
         mockHttpClient.get.mockResolvedValue(mockResponse);
-  
+
         const result = await sdk.getVaultBalance(vaultAddress, userAddress, SupportedNetworks.TESTNET);
-  
+
         expect(result).toEqual(mockResponse);
         expect(result.dfTokens).toBeGreaterThanOrEqual(0);
         expect(Array.isArray(result.underlyingBalance)).toBe(true);
@@ -310,16 +327,17 @@ describe('DefindexSDK - Unit Tests', () => {
     });
 
     it('should prepare a transaction to deposit to vault with valid parameters', async () => {
-      const depositData: DepositToVaultParams = { 
+      const depositData: DepositParams = {
         amounts: [10000000, 20000000], // 1 and 2 tokens (7 decimals)
         caller: 'GUSER1234567890123456789012345678901234567890123456789',
         invest: true,
         slippageBps: 100 // 1% slippage tolerance
       };
-      const mockResponse = { 
+      const mockResponse = {
         xdr: 'AAAAAgAAAAC7VYzjqMryr...',
         simulationResponse: 'SUCCESS',
-        estimatedGas: 50000
+        functionName: 'deposit',
+        params: []
       };
       mockHttpClient.post.mockResolvedValue(mockResponse);
 
@@ -333,11 +351,11 @@ describe('DefindexSDK - Unit Tests', () => {
     });
 
     it('should validate deposit parameters', async () => {
-      const invalidDepositData = { 
+      const invalidDepositData = {
         amounts: [-1000000], // Negative amount should fail
         caller: 'invalid_address',
         invest: true
-      } as DepositToVaultParams;
+      } as DepositParams;
 
       const mockError = new Error('Invalid deposit amount');
       mockHttpClient.post.mockRejectedValue(mockError);
@@ -379,7 +397,7 @@ describe('DefindexSDK - Unit Tests', () => {
     });
 
     it('should get vault report', async () => {
-      const mockResponse = { xdr: 'report_xdr', simulationResponse: 'simulation_data' };
+      const mockResponse = { xdr: 'report_xdr', simulationResponse: 'simulation_data', functionName: 'report', params: [] };
       mockHttpClient.get.mockResolvedValue(mockResponse);
 
       const result = await sdk.getReport(vaultAddress, SupportedNetworks.TESTNET);
@@ -549,7 +567,7 @@ describe('DefindexSDK - Unit Tests', () => {
 
     it('should send a transaction', async () => {
       const xdr = 'signed_xdr_string';
-      const mockResponse = { hash: 'tx_hash', status: 'SUCCESS' };
+      const mockResponse = { txHash: 'tx_hash', success: true, result: null, ledger: 100, createdAt: '', latestLedger: 100, latestLedgerCloseTime: '', feeBump: false, feeCharged: '100' };
       mockHttpClient.post.mockResolvedValue(mockResponse);
 
       const result = await sdk.sendTransaction(xdr, SupportedNetworks.TESTNET);
@@ -609,7 +627,7 @@ describe('DefindexSDK - Unit Tests', () => {
 
     it('should validate XDR format in transaction responses', async () => {
       const vaultAddress = 'CVAULT123456789012345678901234567890123456789012345';
-      const depositData: DepositToVaultParams = {
+      const depositData: DepositParams = {
         amounts: [1000000],
         caller: 'GUSER1234567890123456789012345678901234567890123456789',
         invest: true
@@ -617,7 +635,9 @@ describe('DefindexSDK - Unit Tests', () => {
 
       const responseWithInvalidXDR = {
         xdr: '', // Empty XDR should be handled
-        simulationResponse: 'SUCCESS'
+        simulationResponse: 'SUCCESS',
+        functionName: 'deposit',
+        params: []
       };
       mockHttpClient.post.mockResolvedValue(responseWithInvalidXDR);
 
@@ -652,12 +672,12 @@ describe('DefindexSDK - Unit Tests', () => {
     it('should maintain SDK state after errors', async () => {
       // First request fails
       mockHttpClient.get.mockRejectedValueOnce(new Error('Network error'));
-      
+
       await expect(sdk.healthCheck()).rejects.toThrow('Network error');
 
       // Second request should work normally
       mockHttpClient.get.mockResolvedValueOnce({ status: 'ok' });
-      
+
       const result = await sdk.healthCheck();
       expect(result.status).toBe('ok');
     });
@@ -672,12 +692,12 @@ describe('DefindexSDK - Unit Tests', () => {
     });
 
     it('should handle large numerical values correctly', async () => {
-      const largeAmountData: DepositToVaultParams = {
+      const largeAmountData: DepositParams = {
         amounts: [Number.MAX_SAFE_INTEGER], // Very large amount
         caller: 'GUSER1234567890123456789012345678901234567890123456789',
         invest: true
       };
-      
+
       const mockResponse = { xdr: 'large_amount_xdr' };
       mockHttpClient.post.mockResolvedValue(mockResponse);
 
@@ -694,48 +714,58 @@ describe('DefindexSDK - Unit Tests', () => {
 
   describe('Integration Scenarios', () => {
     beforeEach(() => {
-      sdk = new DefindexSDK({ 
+      sdk = new DefindexSDK({
         baseUrl: 'https://api.defindex.io',
         apiKey: 'test-api-key-123',
-        timeout: 60000 
+        timeout: 60000
       });
       mockHttpClient = (sdk as any).httpClient;
     });
 
     it('should complete a full vault lifecycle workflow', async () => {
       // 1. Get factory address
-      mockHttpClient.get.mockResolvedValueOnce({ 
-        address: 'CFACTORY123456789012345678901234567890123456789012' 
+      mockHttpClient.get.mockResolvedValueOnce({
+        address: 'CFACTORY123456789012345678901234567890123456789012'
       });
 
       const factoryResult = await sdk.getFactoryAddress(SupportedNetworks.TESTNET);
       expect(factoryResult.address).toBeTruthy();
 
       // 2. Create vault
-      const vaultConfig: CreateDefindexVault = {
-        roles: { 0: 'GMANAGER123' },
-        vault_fee_bps: 100,
+      const vaultConfig: CreateVaultParams = {
+        roles: {
+          manager: 'GMANAGER123',
+          feeReceiver: '',
+          emergencyManager: '',
+          rebalanceManager: ''
+        },
+        vaultFeeBps: 100,
         assets: [],
-        name_symbol: { name: 'Test', symbol: 'TST' },
+        name: 'Test',
+        symbol: 'TST',
         upgradable: true,
         caller: 'GCALLER123'
       };
 
-      mockHttpClient.post.mockResolvedValueOnce({ 
+      mockHttpClient.post.mockResolvedValueOnce({
         xdr: 'create_xdr',
-        call_params: vaultConfig,
-        simulation_result: 'SUCCESS'
+        simulationResponse: 'SUCCESS'
       });
 
       const createResult = await sdk.createVault(vaultConfig, SupportedNetworks.TESTNET);
       expect(createResult.xdr).toBeTruthy();
-      expect(createResult.simulation_result).toBe('SUCCESS');
+      expect(createResult.simulationResponse).toBe('SUCCESS');
 
       // 3. Get vault info
       mockHttpClient.get.mockResolvedValueOnce({
         name: 'Test',
         symbol: 'TST',
-        roles: { manager: 'GMANAGER123' },
+        roles: {
+          manager: 'GMANAGER123',
+          feeReceiver: '',
+          emergencyManager: '',
+          rebalanceManager: ''
+        },
         assets: [],
         totalManagedFunds: [],
         feesBps: { vaultFee: 100, defindexFee: 50 },
@@ -758,12 +788,18 @@ describe('DefindexSDK - Unit Tests', () => {
 
       // Vault creation fails
       mockHttpClient.post.mockRejectedValueOnce(new Error('Creation failed'));
-      
-      const vaultConfig: CreateDefindexVault = {
-        roles: { 0: 'GMANAGER123' },
-        vault_fee_bps: 100,
+
+      const vaultConfig: CreateVaultParams = {
+        roles: {
+          manager: 'GMANAGER123',
+          feeReceiver: '',
+          emergencyManager: '',
+          rebalanceManager: ''
+        },
+        vaultFeeBps: 100,
         assets: [],
-        name_symbol: { name: 'Test', symbol: 'TST' },
+        name: 'Test',
+        symbol: 'TST',
         upgradable: true,
         caller: 'GCALLER123'
       };

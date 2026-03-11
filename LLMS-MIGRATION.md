@@ -109,6 +109,132 @@ grep -rn "launchtube\|LaunchTube" --include="*.ts" --include="*.tsx"
 
 ---
 
+## 0.3.0 — Type renames, response shape changes, and DX improvements
+
+The SDK standardized naming conventions and unified response types. No new endpoints — this is a DX cleanup.
+
+### Renamed types
+
+```typescript
+// Before → After
+CreateDefindexVault            → CreateVaultParams
+CreateDefindexVaultDepositDto  → CreateVaultDepositParams
+DepositToVaultParams           → DepositParams
+BaseTransactionResponse        → TransactionResponse
+BaseVaultTransactionResponse   → removed (use TransactionResponse)
+CreateDefindexVaultResponse    → removed (use TransactionResponse)
+CreateVaultDepositResponse     → removed (use TransactionResponse)
+SendTransactionErrorResponse   → removed
+```
+
+### Renamed request fields (factory create endpoints)
+
+Apply these renames in every request body sent to `POST /factory/create-vault` or `POST /factory/create-vault-deposit`:
+
+```typescript
+// Before → After
+vault_fee_bps       → vaultFeeBps
+deposit_amounts     → depositAmounts
+name_symbol.name    → name      // flattened to top-level
+name_symbol.symbol  → symbol    // flattened to top-level
+```
+
+### Removed response fields (factory create endpoints)
+
+`call_params` has been **removed entirely** from factory create responses. These endpoints now return a clean `TransactionResponse`:
+
+```typescript
+// Before
+{
+  call_params: { ... },   // REMOVED
+  xdr: "AAAA...",
+  simulation_result: "SUCCESS"
+}
+
+// After
+{
+  xdr: "AAAA...",
+  simulationResponse: "SUCCESS",
+  operationXDR: "AAAA...",
+  isSmartWallet: false
+}
+```
+
+### Response field: `simulationResponse` (unchanged)
+
+The vault and factory response field remains `simulationResponse`. It was **not** renamed. If you were already using `simulationResponse`, no changes needed.
+
+### Vault roles: numeric indices → named keys
+
+```typescript
+// Before
+roles: Record<number, string>
+// { 0: "GEMERGENCY...", 1: "GFEE...", 2: "GMANAGER...", 3: "GREBALANCE..." }
+
+// After
+roles: VaultRolesConfig
+// { emergencyManager: "G...", feeReceiver: "G...", manager: "G...", rebalanceManager: "G..." }
+```
+
+### `SendTransactionResponse` redesigned
+
+```typescript
+// Before
+interface SendTransactionResponse {
+  status: string;
+  txHash: string;
+  resultXdr: string;
+  resultMetaXdr: string;
+  envelopeXdr: string;
+  returnValue: any;
+  // ...other fields
+}
+
+// After
+interface SendTransactionResponse {
+  txHash: string;
+  success: boolean;
+  result: TransactionResult | null;
+  ledger: number;
+  createdAt: string;
+  latestLedger: number;
+  latestLedgerCloseTime: string;
+  feeBump: boolean;
+  feeCharged: string;
+}
+```
+
+`TransactionResult` is a discriminated union:
+
+```typescript
+type TransactionResult =
+  | { type: 'vault_deposit'; sharesMinted: string }
+  | { type: 'vault_withdraw'; amountsOut: string[] }
+  | { type: 'vault_create'; vaultAddress: string }
+  | { type: 'unknown'; value: unknown }
+```
+
+### Search patterns
+
+```
+# Type renames
+grep -rn "CreateDefindexVault\|CreateDefindexVaultDepositDto\|DepositToVaultParams\|BaseTransactionResponse\|BaseVaultTransactionResponse" --include="*.ts"
+
+# Request field renames (factory create bodies)
+grep -rn "vault_fee_bps\|deposit_amounts\|name_symbol" --include="*.ts"
+
+# Removed response fields
+grep -rn "call_params\|callParams" --include="*.ts"
+
+# Numeric role keys
+grep -rn "roles.*\[0\]\|roles.*\[1\]\|roles.*\[2\]\|roles.*\[3\]" --include="*.ts"
+
+# Old SendTransactionResponse fields
+grep -rn "resultXdr\|resultMetaXdr\|envelopeXdr\|returnValue\|\.status\b" --include="*.ts"
+```
+
+---
+
 ## LaunchTube removal
 
 The LaunchTube relay service has been removed from the `/send` endpoint. Transactions are now always submitted directly via Soroban RPC.
@@ -136,24 +262,19 @@ await api.post('/send', { xdr: signedXdr });
 
 If you have a `LaunchTubeResponse` type or a union like `SendTransactionResponse | LaunchTubeResponse`, replace it with just `SendTransactionResponse`.
 
-The response shape is:
+The response shape is now (see 0.3.0 section above for the full updated type):
 
 ```typescript
 interface SendTransactionResponse {
   txHash: string;
-  status: string;
+  success: boolean;
+  result: TransactionResult | null;
   ledger: number;
+  createdAt: string;
   latestLedger: number;
   latestLedgerCloseTime: string;
-  oldestLedger: number;
-  oldestLedgerCloseTime: string;
-  createdAt: string;
-  applicationOrder: number;
   feeBump: boolean;
-  envelopeXdr: string;
-  resultXdr: string;
-  resultMetaXdr: string;
-  returnValue: any;
+  feeCharged: string;
 }
 ```
 
