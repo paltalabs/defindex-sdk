@@ -33,7 +33,7 @@ import {
  */
 export interface DefindexSDKConfig {
   apiKey?: string;
-  /** Custom API base URL (defaults to 'https://defindex-api-staging-436722401508.us-central1.run.app') */
+  /** Custom API base URL (defaults to 'https://api.defindex.io') */
   baseUrl?: string;
   /** Request timeout in milliseconds (defaults to 30000) */
   timeout?: number;
@@ -48,14 +48,14 @@ export interface DefindexSDKConfig {
  * ```typescript
  * // Basic initialization with default network
  * const sdk = new DefindexSDK({
- *   baseUrl: 'https://defindex-api-staging-436722401508.us-central1.run.app',
+ *   baseUrl: 'https://api.defindex.io',
  *   defaultNetwork: SupportedNetworks.TESTNET
  * });
  *
  * // With API key authentication
  * const sdk = new DefindexSDK({
  *   apiKey: 'sk_your_api_key_here',
- *   baseUrl: 'https://defindex-api-staging-436722401508.us-central1.run.app',
+ *   baseUrl: 'https://api.defindex.io',
  *   defaultNetwork: SupportedNetworks.MAINNET
  * });
  *
@@ -79,7 +79,7 @@ export class DefindexSDK {
     this.config = config;
     this.defaultNetwork = config.defaultNetwork;
     this.httpClient = new HttpClient(
-      config.baseUrl || 'https://defindex-api-staging-436722401508.us-central1.run.app',
+      config.baseUrl || 'https://api.defindex.io',
       config.apiKey || '', // API key or empty string
       config.timeout || 30000
     );
